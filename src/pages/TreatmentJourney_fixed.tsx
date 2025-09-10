@@ -1,8 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Clock, Star, ArrowRight, Navigation, Loader, Phone, Calendar } from 'lucide-react';
-import { useLocation } from '../contexts/LocationContext';
-import api from '../services/api';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Search,
+  MapPin,
+  Star,
+  ArrowRight,
+  Navigation,
+  Loader,
+  Phone,
+  Calendar,
+} from "lucide-react";
+import { useLocation } from "../contexts/LocationContext";
+import api from "../services/api";
 
 interface Treatment {
   _id: string;
@@ -70,19 +79,25 @@ interface Doctor {
 
 const TreatmentJourney: React.FC = () => {
   const navigate = useNavigate();
-  const { 
-    userLocation, 
-    isLoadingLocation, 
-    locationError, 
+  const {
+    userLocation,
+    isLoadingLocation,
+    locationError,
     getCurrentLocation,
-    clearLocationError 
+    clearLocationError,
   } = useLocation();
-  
-  const [step, setStep] = useState<'search' | 'treatment-details' | 'hospitals' | 'doctors'>('search');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTreatment, setSelectedTreatment] = useState<Treatment | null>(null);
+
+  const [step, setStep] = useState<
+    "search" | "treatment-details" | "hospitals" | "doctors"
+  >("search");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTreatment, setSelectedTreatment] = useState<Treatment | null>(
+    null
+  );
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
-  const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null);
+  const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(
+    null
+  );
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(false);
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
@@ -104,7 +119,7 @@ const TreatmentJourney: React.FC = () => {
       setShowLocationPrompt(false);
       await getCurrentLocation();
     } catch (error) {
-      console.error('Failed to get location:', error);
+      console.error("Failed to get location:", error);
       // Continue without location - will use fallback
     }
   };
@@ -112,22 +127,22 @@ const TreatmentJourney: React.FC = () => {
   // Search for treatments
   const handleTreatmentSearch = async () => {
     if (!searchQuery.trim()) return;
-    
+
     setLoading(true);
     try {
-      const response = await api.get('/treatments', {
-        params: { search: searchQuery, limit: 1 }
+      const response = await api.get("/treatments", {
+        params: { search: searchQuery, limit: 1 },
       });
-      
+
       if (response.data.treatments && response.data.treatments.length > 0) {
         setSelectedTreatment(response.data.treatments[0]);
-        setStep('treatment-details');
+        setStep("treatment-details");
       } else {
-        alert('No treatment found. Please try a different search term.');
+        alert("No treatment found. Please try a different search term.");
       }
     } catch (error) {
-      console.error('Error searching treatments:', error);
-      alert('Error searching for treatments. Please try again.');
+      console.error("Error searching treatments:", error);
+      alert("Error searching for treatments. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -136,57 +151,63 @@ const TreatmentJourney: React.FC = () => {
   // Find hospitals for the selected treatment
   const findHospitals = async () => {
     if (!selectedTreatment) {
-      alert('Please select a treatment first.');
+      alert("Please select a treatment first.");
       return;
     }
-    
+
     // Use user location if available, otherwise use Delhi as fallback
-    const location = userLocation || { lat: 28.6139, lng: 77.2090 };
-    const locationSource = userLocation ? '📍 your actual location' : '🏢 Delhi (default)';
-    
-    console.log('🔍 Hospital Search Debug:', {
+    const location = userLocation || { lat: 28.6139, lng: 77.209 };
+    const locationSource = userLocation
+      ? "📍 your actual location"
+      : "🏢 Delhi (default)";
+
+    console.log("🔍 Hospital Search Debug:", {
       userLocationExists: !!userLocation,
       searchLocation: location,
       locationSource,
       treatment: selectedTreatment.name,
-      specialty: selectedTreatment.category
+      specialty: selectedTreatment.category,
     });
-    
+
     setLoading(true);
     try {
       // Search for hospitals that can handle this treatment
-      const response = await api.get('/hospitals/nearby', {
+      const response = await api.get("/hospitals/nearby", {
         params: {
           lat: location.lat,
           lng: location.lng,
           specialty: selectedTreatment.category,
           radius: 20, // 20km radius
-          limit: 10
-        }
+          limit: 10,
+        },
       });
-      
-      console.log('Hospital search response:', response.data);
-      
+
+      console.log("Hospital search response:", response.data);
+
       if (response.data.hospitals && response.data.hospitals.length > 0) {
         setHospitals(response.data.hospitals);
-        setStep('hospitals');
-        
+        setStep("hospitals");
+
         // Show info about location used
         if (!userLocation) {
-          alert(`Found ${response.data.hospitals.length} hospitals near Delhi. For better results, please enable location access.`);
+          alert(
+            `Found ${response.data.hospitals.length} hospitals near Delhi. For better results, please enable location access.`
+          );
         }
       } else {
-        alert(`No hospitals found for ${selectedTreatment.category} treatment near ${locationSource}. Showing all nearby hospitals.`);
+        alert(
+          `No hospitals found for ${selectedTreatment.category} treatment near ${locationSource}. Showing all nearby hospitals.`
+        );
         // Try without specialty filter
-        const fallbackResponse = await api.get('/hospitals', {
-          params: { limit: 10 }
+        const fallbackResponse = await api.get("/hospitals", {
+          params: { limit: 10 },
         });
         setHospitals(fallbackResponse.data.hospitals || []);
-        setStep('hospitals');
+        setStep("hospitals");
       }
     } catch (error) {
-      console.error('Error finding hospitals:', error);
-      alert('Error finding hospitals. Please try again.');
+      console.error("Error finding hospitals:", error);
+      alert("Error finding hospitals. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -196,23 +217,23 @@ const TreatmentJourney: React.FC = () => {
   const selectHospital = async (hospital: Hospital) => {
     setSelectedHospital(hospital);
     setLoading(true);
-    
+
     try {
       // Get doctors from the selected hospital with the required specialty
       const response = await api.get(`/doctors/hospital/${hospital._id}`, {
         params: {
-          specialty: selectedTreatment?.category
-        }
+          specialty: selectedTreatment?.category,
+        },
       });
-      
-      console.log('Doctor search response:', response.data);
+
+      console.log("Doctor search response:", response.data);
       setDoctors(response.data.doctors || []);
-      setStep('doctors');
+      setStep("doctors");
     } catch (error) {
-      console.error('Error fetching doctors:', error);
+      console.error("Error fetching doctors:", error);
       // Continue with empty doctors list
       setDoctors([]);
-      setStep('doctors');
+      setStep("doctors");
     } finally {
       setLoading(false);
     }
@@ -225,7 +246,8 @@ const TreatmentJourney: React.FC = () => {
           Start Your Treatment Journey
         </h1>
         <p className="text-gray-600">
-          Search for medical treatments and find the best hospitals and doctors near you
+          Search for medical treatments and find the best hospitals and doctors
+          near you
         </p>
       </div>
 
@@ -242,7 +264,7 @@ const TreatmentJourney: React.FC = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="e.g., heart surgery, knee replacement, cataract surgery"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                onKeyPress={(e) => e.key === 'Enter' && handleTreatmentSearch()}
+                onKeyPress={(e) => e.key === "Enter" && handleTreatmentSearch()}
               />
               <Search className="absolute right-3 top-3 h-5 w-5 text-gray-400" />
             </div>
@@ -258,7 +280,7 @@ const TreatmentJourney: React.FC = () => {
             ) : (
               <Search className="h-4 w-4" />
             )}
-            <span>{loading ? 'Searching...' : 'Search Treatment'}</span>
+            <span>{loading ? "Searching..." : "Search Treatment"}</span>
           </button>
         </div>
       </div>
@@ -270,7 +292,7 @@ const TreatmentJourney: React.FC = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Treatment Details</h1>
         <button
-          onClick={() => setStep('search')}
+          onClick={() => setStep("search")}
           className="text-blue-600 hover:text-blue-700 flex items-center space-x-1"
         >
           <span>← Back to search</span>
@@ -289,47 +311,68 @@ const TreatmentJourney: React.FC = () => {
             <p className="text-gray-600">{selectedTreatment.description}</p>
           </div>
 
-          {selectedTreatment.procedures && selectedTreatment.procedures.length > 0 && (
-            <div>
-              <h3 className="font-medium text-gray-900 mb-3">Available Procedures:</h3>
-              <ul className="space-y-2">
-                {selectedTreatment.procedures.map((procedure, index) => (
-                  <li key={index} className="flex items-start space-x-2">
-                    <span className="text-blue-600">•</span>
-                    <div>
-                      <span className="font-medium">{procedure.name}</span>
-                      <span className="text-gray-500"> ({procedure.duration})</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          {selectedTreatment.procedures &&
+            selectedTreatment.procedures.length > 0 && (
+              <div>
+                <h3 className="font-medium text-gray-900 mb-3">
+                  Available Procedures:
+                </h3>
+                <ul className="space-y-2">
+                  {selectedTreatment.procedures.map((procedure, index) => (
+                    <li key={index} className="flex items-start space-x-2">
+                      <span className="text-blue-600">•</span>
+                      <div>
+                        <span className="font-medium">{procedure.name}</span>
+                        <span className="text-gray-500">
+                          {" "}
+                          ({procedure.duration})
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
             <div className="text-center">
-              <div className="font-medium text-gray-900">Procedure Duration</div>
-              <div className="text-gray-600">{selectedTreatment.duration?.procedure || '2-8 hours'}</div>
+              <div className="font-medium text-gray-900">
+                Procedure Duration
+              </div>
+              <div className="text-gray-600">
+                {selectedTreatment.duration?.procedure || "2-8 hours"}
+              </div>
             </div>
             <div className="text-center">
               <div className="font-medium text-gray-900">Hospital Stay</div>
-              <div className="text-gray-600">{selectedTreatment.duration?.hospital || '5-10 days'}</div>
+              <div className="text-gray-600">
+                {selectedTreatment.duration?.hospital || "5-10 days"}
+              </div>
             </div>
             <div className="text-center">
               <div className="font-medium text-gray-900">Recovery Time</div>
-              <div className="text-gray-600">{selectedTreatment.duration?.recovery || '6-12 weeks'}</div>
+              <div className="text-gray-600">
+                {selectedTreatment.duration?.recovery || "6-12 weeks"}
+              </div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
             <div>
               <div className="font-medium text-gray-900">Success Rate</div>
-              <div className="text-gray-600">{selectedTreatment.successRate || 95}%</div>
+              <div className="text-gray-600">
+                {selectedTreatment.successRate || 95}%
+              </div>
             </div>
             <div>
               <div className="font-medium text-gray-900">Cost Range</div>
               <div className="text-gray-600">
-                {selectedTreatment.pricing?.currency || 'INR'} {selectedTreatment.pricing?.minPrice?.toLocaleString() || '200,000'} - {selectedTreatment.pricing?.maxPrice?.toLocaleString() || '2,000,000'}
+                {selectedTreatment.pricing?.currency || "INR"}{" "}
+                {selectedTreatment.pricing?.minPrice?.toLocaleString() ||
+                  "200,000"}{" "}
+                -{" "}
+                {selectedTreatment.pricing?.maxPrice?.toLocaleString() ||
+                  "2,000,000"}
               </div>
             </div>
           </div>
@@ -348,7 +391,7 @@ const TreatmentJourney: React.FC = () => {
               </>
             )}
           </button>
-          
+
           {/* Location Update Button */}
           {!userLocation && (
             <button
@@ -362,7 +405,9 @@ const TreatmentJourney: React.FC = () => {
                 <Navigation className="h-4 w-4" />
               )}
               <span>
-                {isLoadingLocation ? 'Getting Location...' : 'Enable Location for Better Results'}
+                {isLoadingLocation
+                  ? "Getting Location..."
+                  : "Enable Location for Better Results"}
               </span>
             </button>
           )}
@@ -378,7 +423,7 @@ const TreatmentJourney: React.FC = () => {
           Hospitals for {selectedTreatment?.name}
         </h1>
         <button
-          onClick={() => setStep('treatment-details')}
+          onClick={() => setStep("treatment-details")}
           className="text-green-600 hover:text-green-700"
         >
           ← Back to treatment
@@ -402,31 +447,31 @@ const TreatmentJourney: React.FC = () => {
                     {hospital.type}
                   </span>
                 </div>
-                
+
                 <div className="flex items-center text-gray-600 mb-2">
                   <MapPin className="h-4 w-4 mr-1" />
-                  <span className="text-sm">
-                    {hospital.location.address}
-                  </span>
+                  <span className="text-sm">{hospital.location.address}</span>
                   {hospital.distance && (
                     <span className="ml-2 text-green-600 font-medium">
                       • {hospital.distance} km away
                     </span>
                   )}
                 </div>
-                
+
                 <div className="flex items-center space-x-4 text-sm text-gray-500">
                   {hospital.rating && (
                     <div className="flex items-center">
                       <Star className="h-4 w-4 text-yellow-400 mr-1" />
                       <span>{hospital.rating.value}/5</span>
-                      <span className="ml-1">({hospital.rating.total_reviews} reviews)</span>
+                      <span className="ml-1">
+                        ({hospital.rating.total_reviews} reviews)
+                      </span>
                     </div>
                   )}
                   <Phone className="h-4 w-4" />
                 </div>
               </div>
-              
+
               <ArrowRight className="h-5 w-5 text-gray-400" />
             </div>
           </div>
@@ -442,10 +487,12 @@ const TreatmentJourney: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">
             Doctors at {selectedHospital?.name}
           </h1>
-          <p className="text-gray-600">Specializing in {selectedTreatment?.category}</p>
+          <p className="text-gray-600">
+            Specializing in {selectedTreatment?.category}
+          </p>
         </div>
         <button
-          onClick={() => setStep('hospitals')}
+          onClick={() => setStep("hospitals")}
           className="text-green-600 hover:text-green-700"
         >
           ← Back to hospitals
@@ -468,15 +515,17 @@ const TreatmentJourney: React.FC = () => {
                     <span>{doctor.designation}</span>
                     <span>• {doctor.experience_years} years experience</span>
                   </div>
-                  
+
                   <button
-                    onClick={() => navigate('/book-consultation', {
-                      state: {
-                        doctor,
-                        hospital: selectedHospital,
-                        treatment: selectedTreatment
-                      }
-                    })}
+                    onClick={() =>
+                      navigate("/book-consultation", {
+                        state: {
+                          doctor,
+                          hospital: selectedHospital,
+                          treatment: selectedTreatment,
+                        },
+                      })
+                    }
                     className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
                   >
                     <Calendar className="h-4 w-4" />
@@ -511,8 +560,9 @@ const TreatmentJourney: React.FC = () => {
               <h3 className="text-lg font-semibold">Enable Location Access</h3>
             </div>
             <p className="text-gray-600 mb-6">
-              To find the best hospitals near you, we need access to your location. 
-              This helps us show nearby healthcare facilities and accurate travel times.
+              To find the best hospitals near you, we need access to your
+              location. This helps us show nearby healthcare facilities and
+              accurate travel times.
             </p>
             <div className="flex space-x-3">
               <button
@@ -525,7 +575,7 @@ const TreatmentJourney: React.FC = () => {
                 ) : (
                   <MapPin className="h-4 w-4 mr-2" />
                 )}
-                {isLoadingLocation ? 'Getting Location...' : 'Enable Location'}
+                {isLoadingLocation ? "Getting Location..." : "Enable Location"}
               </button>
               <button
                 onClick={() => setShowLocationPrompt(false)}
@@ -543,10 +593,10 @@ const TreatmentJourney: React.FC = () => {
 
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="container mx-auto px-4">
-          {step === 'search' && renderSearchStep()}
-          {step === 'treatment-details' && renderTreatmentDetails()}
-          {step === 'hospitals' && renderHospitals()}
-          {step === 'doctors' && renderDoctors()}
+          {step === "search" && renderSearchStep()}
+          {step === "treatment-details" && renderTreatmentDetails()}
+          {step === "hospitals" && renderHospitals()}
+          {step === "doctors" && renderDoctors()}
         </div>
       </div>
     </>
