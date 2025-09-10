@@ -865,104 +865,98 @@ const TreatmentSearch: React.FC = () => {
                     </h2>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {treatmentData.doctors.map(
-                        (doctor: Doctor, index: number) => (
-                          <div
-                            key={doctor.id}
-                            className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow"
-                          >
-                            <div className="flex items-start space-x-4 mb-4">
-                              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                                <Award className="h-8 w-8 text-blue-600" />
-                              </div>
-                              <div className="flex-1">
-                                <h3 className="text-lg font-semibold text-gray-900">
-                                  {doctor.name}
-                                </h3>
-                                <p className="text-blue-600 font-medium">
-                                  {doctor.qualification}
-                                </p>
-                                <p className="text-gray-600">
-                                  {doctor.specialization}
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <div className="flex items-center">
-                                  <Star className="h-4 w-4 text-yellow-500 mr-1" />
-                                  <span className="font-bold">
-                                    {doctor.rating}
-                                  </span>
-                                </div>
-                              </div>
+                      {treatmentData.doctors.map((doctor: Doctor) => (
+                        <div
+                          key={doctor.id}
+                          className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow"
+                        >
+                          <div className="flex items-start space-x-4 mb-4">
+                            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                              <Award className="h-8 w-8 text-blue-600" />
                             </div>
-
-                            <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-                              <div>
-                                <p className="text-gray-600">Experience:</p>
-                                <p className="font-medium">
-                                  {doctor.experience}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-gray-600">Hospital:</p>
-                                <p className="font-medium">{doctor.hospital}</p>
-                              </div>
-                              <div>
-                                <p className="text-gray-600">
-                                  Consultation Fee:
-                                </p>
-                                <p className="font-medium text-green-600">
-                                  {formatCurrency(doctor.consultationFee)}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-gray-600">Languages:</p>
-                                <p className="font-medium">
-                                  {doctor.languages.join(", ")}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="mb-4">
-                              <p className="text-gray-600 text-sm mb-1">
-                                Availability:
+                            <div className="flex-1">
+                              <h3 className="text-lg font-semibold text-gray-900">
+                                {doctor.name}
+                              </h3>
+                              <p className="text-blue-600 font-medium">
+                                {doctor.qualification}
                               </p>
-                              <div className="space-y-1">
-                                {doctor.availability.map(
-                                  (slot: string, idx: number) => (
-                                    <p
+                              <p className="text-gray-600">
+                                {doctor.specialization}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <div className="flex items-center">
+                                <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                                <span className="font-bold">
+                                  {doctor.rating}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
+                            <div>
+                              <p className="text-gray-600">Experience:</p>
+                              <p className="font-medium">{doctor.experience}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-600">Hospital:</p>
+                              <p className="font-medium">{doctor.hospital}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-600">Consultation Fee:</p>
+                              <p className="font-medium text-green-600">
+                                {formatCurrency(doctor.consultationFee)}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-gray-600">Languages:</p>
+                              <p className="font-medium">
+                                {doctor.languages.join(", ")}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="mb-4">
+                            <p className="text-gray-600 text-sm mb-1">
+                              Availability:
+                            </p>
+                            <div className="space-y-1">
+                              {doctor.availability.map(
+                                (slot: string, idx: number) => (
+                                  <p
+                                    key={idx}
+                                    className="text-sm font-medium text-gray-700"
+                                  >
+                                    {slot}
+                                  </p>
+                                )
+                              )}
+                            </div>
+                          </div>
+
+                          {doctor.awards && doctor.awards.length > 0 && (
+                            <div className="border-t pt-4">
+                              <p className="text-gray-600 text-sm mb-2">
+                                Awards & Recognition:
+                              </p>
+                              <div className="flex flex-wrap gap-1">
+                                {doctor.awards.map(
+                                  (award: string, idx: number) => (
+                                    <span
                                       key={idx}
-                                      className="text-sm font-medium text-gray-700"
+                                      className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded"
                                     >
-                                      {slot}
-                                    </p>
+                                      {award}
+                                    </span>
                                   )
                                 )}
                               </div>
                             </div>
-
-                            {doctor.awards && doctor.awards.length > 0 && (
-                              <div className="border-t pt-4">
-                                <p className="text-gray-600 text-sm mb-2">
-                                  Awards & Recognition:
-                                </p>
-                                <div className="flex flex-wrap gap-1">
-                                  {doctor.awards.map(
-                                    (award: string, idx: number) => (
-                                      <span
-                                        key={idx}
-                                        className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded"
-                                      >
-                                        {award}
-                                      </span>
-                                    )
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )
-                      )}
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>

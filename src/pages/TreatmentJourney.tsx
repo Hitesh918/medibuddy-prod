@@ -1,31 +1,18 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "../contexts/LocationContext";
 import api from "../services/api";
 import {
   Search,
   MapPin,
-  Clock,
   Star,
-  ArrowRight,
   Navigation,
   Loader2,
-  Phone,
-  Calendar,
-  HeartPulse,
-  Stethoscope,
   Users,
   Building,
   ChevronDown,
-  CheckCircle,
   ArrowLeft,
 } from "lucide-react";
-import type {
-  TreatmentPlan,
-  Doctor as PlannerDoctor,
-  Hospital as PlannerHospital,
-  ApiError,
-} from "../types/treatmentPlanner";
 
 // --- Type Interfaces (from original code to fix errors) ---
 interface Treatment {
@@ -80,54 +67,6 @@ interface Doctor {
   image_url?: string;
 }
 
-// --- Reusable UI Components ---
-const StepIndicator: React.FC<{ currentStep: number; steps: string[] }> = ({
-  currentStep,
-  steps,
-}) => (
-  <nav aria-label="Progress">
-    <ol className="flex items-center justify-center">
-      {steps.map((step, index) => (
-        <React.Fragment key={step}>
-          <li className="relative flex items-center justify-center">
-            <div className="flex flex-col items-center text-center">
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-all ${
-                  index + 1 === currentStep
-                    ? "bg-blue-700 text-white ring-4 ring-blue-200"
-                    : index + 1 < currentStep
-                    ? "bg-green-500 text-white"
-                    : "bg-gray-200 text-gray-500"
-                }`}
-              >
-                {index + 1 < currentStep ? (
-                  <CheckCircle size={20} />
-                ) : (
-                  index + 1
-                )}
-              </div>
-              <p
-                className={`mt-2 text-xs font-semibold w-24 ${
-                  index + 1 <= currentStep ? "text-blue-700" : "text-gray-500"
-                }`}
-              >
-                {step}
-              </p>
-            </div>
-          </li>
-          {index < steps.length - 1 && (
-            <div
-              className={`h-1 w-12 sm:w-24 rounded-full mx-2 ${
-                index + 1 < currentStep ? "bg-blue-700" : "bg-gray-200"
-              }`}
-            ></div>
-          )}
-        </React.Fragment>
-      ))}
-    </ol>
-  </nav>
-);
-
 // --- Main Treatment Journey Component ---
 const TreatmentJourney: React.FC = () => {
   const navigate = useNavigate();
@@ -153,8 +92,7 @@ const TreatmentJourney: React.FC = () => {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(false);
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
-  const [hospitalSearchQuery, setHospitalSearchQuery] = useState("");
-  const [selectedCity, setSelectedCity] = useState<string>("");
+
   const [specializations, setSpecializations] = useState<string[]>([]);
   const [selectedSpecialization, setSelectedSpecialization] =
     useState<string>("");
@@ -306,53 +244,53 @@ const TreatmentJourney: React.FC = () => {
     }
   };
 
-  const searchHospitalsByName = async () => {
-    if (!hospitalSearchQuery.trim()) return;
-    setLoading(true);
-    try {
-      const response = await api.get("/hospitals", {
-        params: {
-          search: hospitalSearchQuery,
-          specialty: selectedTreatment?.category,
-          limit: 20,
-        },
-      });
-      setHospitals(response.data.hospitals || []);
-    } catch (error) {
-      alert("Error searching hospitals.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const searchHospitalsByName = async () => {
+  //   if (!hospitalSearchQuery.trim()) return;
+  //   setLoading(true);
+  //   try {
+  //     const response = await api.get("/hospitals", {
+  //       params: {
+  //         search: hospitalSearchQuery,
+  //         specialty: selectedTreatment?.category,
+  //         limit: 20,
+  //       },
+  //     });
+  //     setHospitals(response.data.hospitals || []);
+  //   } catch (error) {
+  //     alert("Error searching hospitals.");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
-  const searchHospitalsByCity = async (city: string) => {
-    setSelectedCity(city);
-    setLoading(true);
-    try {
-      const response = await api.get("/hospitals", {
-        params: {
-          city: city,
-          specialty: selectedTreatment?.category,
-          limit: 20,
-        },
-      });
-      setHospitals(response.data.hospitals || []);
-    } catch (error) {
-      alert(`Error finding hospitals in ${city}.`);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const searchHospitalsByCity = async (city: string) => {
+  //   setSelectedCity(city);
+  //   setLoading(true);
+  //   try {
+  //     const response = await api.get("/hospitals", {
+  //       params: {
+  //         city: city,
+  //         specialty: selectedTreatment?.category,
+  //         limit: 20,
+  //       },
+  //     });
+  //     setHospitals(response.data.hospitals || []);
+  //   } catch (error) {
+  //     alert(`Error finding hospitals in ${city}.`);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
-  const journeySteps = ["Select Treatment", "Find Hospital", "Choose Doctor"];
-  const currentStepIndex =
-    step === "search"
-      ? 1
-      : step === "treatment-details"
-      ? 1
-      : step === "hospitals"
-      ? 2
-      : 3;
+  // const journeySteps = ["Select Treatment", "Find Hospital", "Choose Doctor"];
+  // const currentStepIndex =
+  //   step === "search"
+  //     ? 1
+  //     : step === "treatment-details"
+  //     ? 1
+  //     : step === "hospitals"
+  //     ? 2
+  //     : 3;
 
   const renderComponentByStep = () => {
     switch (step) {

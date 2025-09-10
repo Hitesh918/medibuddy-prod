@@ -9,11 +9,9 @@ import {
   Star,
   Award,
   AlertCircle,
-  CheckCircle,
   Info,
   Stethoscope,
   Building,
-  HeartPulse,
   ChevronLeft,
   ChevronRight,
   Shield,
@@ -69,47 +67,47 @@ const InfoCard: React.FC<{
   </div>
 );
 
-const FormattedAiTips: React.FC<{ text: string }> = ({ text }) => {
-  const lines = text.split("\n").filter((line) => line.trim() !== "");
-  const renderLine = (line: string, index: number) => {
-    if (line.startsWith("## ")) {
-      return (
-        <div key={index} className="flex items-center gap-3 mt-6 mb-3">
-          <div className="bg-blue-100 p-2 rounded-full">
-            <HeartPulse size={20} className="text-blue-700" />
-          </div>
-          <h2 className="text-xl font-bold text-gray-800">
-            {line.substring(3)}
-          </h2>
-        </div>
-      );
-    }
-    if (line.startsWith("**") && line.endsWith("**")) {
-      return (
-        <p key={index} className="font-semibold text-gray-700 my-2">
-          {line.substring(2, line.length - 2)}
-        </p>
-      );
-    }
-    if (line.startsWith("* ")) {
-      return (
-        <li key={index} className="flex gap-3 items-start">
-          <CheckCircle
-            size={16}
-            className="text-green-500 mt-1 flex-shrink-0"
-          />
-          <span>{line.substring(2)}</span>
-        </li>
-      );
-    }
-    return <p key={index}>{line}</p>;
-  };
-  return (
-    <div className="space-y-2 text-gray-600 leading-relaxed">
-      {lines.map(renderLine)}
-    </div>
-  );
-};
+// const FormattedAiTips: React.FC<{ text: string }> = ({ text }) => {
+//   const lines = text.split("\n").filter((line) => line.trim() !== "");
+//   const renderLine = (line: string, index: number) => {
+//     if (line.startsWith("## ")) {
+//       return (
+//         <div key={index} className="flex items-center gap-3 mt-6 mb-3">
+//           <div className="bg-blue-100 p-2 rounded-full">
+//             <HeartPulse size={20} className="text-blue-700" />
+//           </div>
+//           <h2 className="text-xl font-bold text-gray-800">
+//             {line.substring(3)}
+//           </h2>
+//         </div>
+//       );
+//     }
+//     if (line.startsWith("**") && line.endsWith("**")) {
+//       return (
+//         <p key={index} className="font-semibold text-gray-700 my-2">
+//           {line.substring(2, line.length - 2)}
+//         </p>
+//       );
+//     }
+//     if (line.startsWith("* ")) {
+//       return (
+//         <li key={index} className="flex gap-3 items-start">
+//           <CheckCircle
+//             size={16}
+//             className="text-green-500 mt-1 flex-shrink-0"
+//           />
+//           <span>{line.substring(2)}</span>
+//         </li>
+//       );
+//     }
+//     return <p key={index}>{line}</p>;
+//   };
+//   return (
+//     <div className="space-y-2 text-gray-600 leading-relaxed">
+//       {lines.map(renderLine)}
+//     </div>
+//   );
+// };
 
 // --- Main Treatment Search Component ---
 const TreatmentSearch: React.FC = () => {
