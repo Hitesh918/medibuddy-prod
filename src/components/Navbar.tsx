@@ -1,14 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
+import { useSelector, useDispatch } from "react-redux"; // Import useDispatch
 import { type RootState } from "../store/store";
+import { logout } from "../store/slices/authSlice";
 import Logo from "../assets/logo.png";
-import { User, Menu, X, ChevronDown } from "lucide-react";
+import { User, Menu, X, ChevronDown, LogOut, UserCircle } from "lucide-react"; // Added new icons
 
 const Navbar: React.FC<{ onMenuClick?: () => void }> = ({ onMenuClick }) => {
   const { user, isAuthenticated } = useSelector(
     (state: RootState) => state.auth
   );
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
@@ -33,6 +36,12 @@ const Navbar: React.FC<{ onMenuClick?: () => void }> = ({ onMenuClick }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const handleLogout = () => {
+    dispatch(logout());
+    setIsUserDropdownOpen(false);
+    navigate("/login"); // Redirect to login after logout
+  };
+
   const navLinks = [
     { href: "/symptom-checker", label: "Symptom Checker" },
     { href: "/treatments", label: "Treatments" },
@@ -51,7 +60,7 @@ const Navbar: React.FC<{ onMenuClick?: () => void }> = ({ onMenuClick }) => {
           </button>
         </div>
 
-        {/* CHANGE: Added MediiMate Logo for Desktop View */}
+        {/* MediiMate Logo for Desktop View */}
         <div className="hidden lg:flex">
           <Link to="/dashboard" className="flex items-center gap-2">
             <img
@@ -64,7 +73,7 @@ const Navbar: React.FC<{ onMenuClick?: () => void }> = ({ onMenuClick }) => {
         </div>
       </div>
 
-      {/* User Dropdown Menu */}
+      {/* --- MODIFICATION START: User Dropdown Menu --- */}
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
@@ -84,12 +93,34 @@ const Navbar: React.FC<{ onMenuClick?: () => void }> = ({ onMenuClick }) => {
             }`}
           />
         </button>
+        {/* --- Dropdown Panel --- */}
+        {isUserDropdownOpen && (
+          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border z-10 overflow-hidden">
+            <Link
+              to="/profile"
+              onClick={() => setIsUserDropdownOpen(false)}
+              className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-100"
+            >
+              <UserCircle size={18} />
+              <span>My Profile</span>
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50"
+            >
+              <LogOut size={18} />
+              <span>Logout</span>
+            </button>
+          </div>
+        )}
       </div>
+      {/* --- MODIFICATION END --- */}
     </div>
   );
 
   // --- Logged-Out Guest Navbar ---
   const renderGuestNav = () => (
+    // ... (existing guest navbar code, no changes needed)
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="relative flex h-20 items-center justify-between">
         <div className="flex-shrink-0">

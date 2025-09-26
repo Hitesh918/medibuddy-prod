@@ -1,14 +1,14 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-// Import the new SharedLayout
+// --- Route Protection Components ---
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import { AuthenticatedRedirect } from "./components/AuthenticatedRedirect";
+
+// --- Layout Component ---
 import SharedLayout from "./components/layout/SharedLayout";
 
-// Import Pages
+// --- Page Components ---
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -19,36 +19,83 @@ import HospitalFinder from "./pages/HospitalFinder";
 import ReportAnalysis from "./pages/ReportAnalysis";
 import TreatmentJourney from "./pages/TreatmentJourney";
 import BookConsultation from "./pages/BookConsultation";
-import LocationTest from "./pages/LocationTest";
 import LoginWithOtp from "./pages/OTPLogin";
 import PrescriptionManager from "./pages/PrescriptionManager";
+import UserProfilePage from "./pages/UserProfile";
+
+// A simple component for handling 404 Not Found pages
+const NotFoundPage: React.FC = () => <h1>404: Page Not Found</h1>;
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* --- Routes WITHOUT Navbar/Footer (Auth Pages) --- */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/otp-login" element={<LoginWithOtp />} />
-        <Route path="/register" element={<Register />} />
-        <Route index element={<Home />} />
+        {/*
+          --- Public Routes ---
+          These routes are for users who are NOT logged in.
+          If a logged-in user tries to access them, they will be
+          redirected to the dashboard.
+        */}
+        <Route
+          path="/"
+          element={
+            <AuthenticatedRedirect>
+              <Home />
+            </AuthenticatedRedirect>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <AuthenticatedRedirect>
+              <Login />
+            </AuthenticatedRedirect>
+          }
+        />
+        <Route
+          path="/otp-login"
+          element={
+            <AuthenticatedRedirect>
+              <LoginWithOtp />
+            </AuthenticatedRedirect>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <AuthenticatedRedirect>
+              <Register />
+            </AuthenticatedRedirect>
+          }
+        />
 
-        {/* --- Routes WITH Navbar/Footer (Shared Layout) --- */}
-        <Route path="/" element={<SharedLayout />}>
-          {/* `index` specifies the default child route for the parent's path */}
+        {/*
+          --- Protected Routes ---
+          These routes require the user to be logged in.
+          They are nested within the SharedLayout, so they will
+          all share the common Navbar and Footer.
+        */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <SharedLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="symptom-checker" element={<SymptomChecker />} />
+          <Route path="profile" element={<UserProfilePage />} />
           <Route path="treatments" element={<TreatmentSearch />} />
           <Route path="treatment-journey" element={<TreatmentJourney />} />
           <Route path="book-consultation" element={<BookConsultation />} />
           <Route path="prescriptions" element={<PrescriptionManager />} />
           <Route path="hospitals" element={<HospitalFinder />} />
           <Route path="report-analysis" element={<ReportAnalysis />} />
-          <Route path="location-test" element={<LocationTest />} />
         </Route>
 
-        {/* Catch-all route to redirect to home */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* --- Catch-all 404 Route --- */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Router>
   );

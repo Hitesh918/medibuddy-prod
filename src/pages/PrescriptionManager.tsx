@@ -103,6 +103,8 @@ const PrescriptionManager: React.FC = () => {
     return () => clearInterval(intervalId);
   }, [fetchPrescriptions]);
 
+  // In your PrescriptionManager.tsx file
+
   const handleFileUpload = async () => {
     if (!uploadFile) {
       setError("Please select a file to upload.");
@@ -121,10 +123,14 @@ const PrescriptionManager: React.FC = () => {
     try {
       const formData = new FormData();
       formData.append("prescriptionFile", uploadFile);
-      formData.append("user_phone", phone);
 
-      if (prescriptionTitle) formData.append("title", prescriptionTitle);
-      if (prescriptionNotes) formData.append("notes", prescriptionNotes);
+      // --- FIX: Use formData.set() to prevent duplicates ---
+      // This ensures that if user_phone is ever added twice,
+      // the last one set is the only one that gets sent.
+      formData.set("user_phone", phone);
+
+      if (prescriptionTitle) formData.set("title", prescriptionTitle);
+      if (prescriptionNotes) formData.set("notes", prescriptionNotes);
 
       const response = await prescriptionAPI.uploadPrescription(formData);
 

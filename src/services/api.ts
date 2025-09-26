@@ -45,6 +45,36 @@ const getUserId = (): string | null => {
   return null;
 };
 
+const getUserDetails = (): { id: string | null; phone: string | null } => {
+  const userString = localStorage.getItem("user");
+  if (userString) {
+    try {
+      const user = JSON.parse(userString);
+      return { id: user?.id || null, phone: user?.phone || null };
+    } catch (e) {
+      console.error("Error parsing user from localStorage", e);
+    }
+  }
+  return { id: null, phone: null };
+};
+
+interface UpdateProfileData {
+  name?: string;
+  email?: string;
+  age?: string;
+  blood_group?: string;
+  gender?: "male" | "female" | "other";
+  preferences?: {
+    notifications?: {
+      email?: boolean;
+      sms?: boolean;
+    };
+  };
+  reminders_enabled?: boolean;
+  daily_tips_enabled?: boolean;
+  daily_tips_delivery_time?: string;
+}
+
 // Auth API
 export const authAPI = {
   register: (userData: {
@@ -69,6 +99,31 @@ export const authAPI = {
 
   verifyOtp: (phone: string, otp: string) =>
     api.post("/auth/verify-otp", { phone, otp }),
+
+  checkUserExists: (phone: string) =>
+    api.get("/auth/profile", { params: { phone } }),
+};
+
+// --- MODIFIED: Profile API ---
+export const profileAPI = {
+  /**
+   * Fetches the profile of the currently authenticated user.
+   */
+  getProfile: () => api.get("/auth/profile"),
+
+  /**
+   * Fetches a user's profile by their ID or phone number.
+   * @param params - e.g., { id: "some-id" } or { phone: "+91..." }
+   */
+  getProfileByIdentifier: (params: { id?: string; phone?: string }) =>
+    api.get("/auth/profile", { params }),
+
+  /**
+   * Updates the profile of the currently authenticated user.
+   * @param profileData - An object containing the fields to update.
+   */
+  updateProfile: (profileData: UpdateProfileData) =>
+    api.put("/auth/profile", profileData),
 };
 
 // AI API
@@ -265,23 +320,37 @@ export const reportAPI = {
 // --- NEW: Prescription API ---
 export const prescriptionAPI = {
   getPrescriptions: (params?: any) => {
-    const userId = getUserId();
-    if (!userId) return Promise.reject(new Error("User not logged in"));
-    // The backend route is /prescriptions/:uid, so we pass userId
-    return api.get(`/reports/prescriptions/${userId}`, { params });
+    // 1. Get the user's phone number from localStorage
+    const { phone } = getUserDetails();
+
+    // 2. If the phone number isn't found, reject the request
+    if (!phone) {
+      return Promise.reject(new Error("User phone number not found."));
+    }
+
+    // 3. Combine any existing params with the user_phone
+    const requestParams = {
+      ...params,
+      user_phone: phone, // Add the phone number here
+    };
+
+    // 4. Make the API call with the phone number in the query parameters
+    return api.get(`/reports/prescriptions/me`, { params: requestParams });
   },
+
   uploadPrescription: (formData: FormData) => {
-    const userId = getUserId();
+    const { id: userId } = getUserDetails(); // Only get the ID for the URL
     if (!userId) return Promise.reject(new Error("User not logged in"));
-    // Assuming an upload endpoint similar to reports for consistency
+
+    // DO NOT add user_phone here again. Just send the formData as is.
     return api.post(`/reports/prescriptions/upload/${userId}`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
+
   deletePrescription: (id: string) => {
-    const userId = getUserId();
+    const { id: userId } = getUserDetails();
     if (!userId) return Promise.reject(new Error("User not logged in"));
-    // Assuming a delete endpoint similar to reports
     return api.delete(`/reports/prescriptions/${userId}/${id}`);
   },
 };

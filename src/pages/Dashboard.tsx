@@ -3,15 +3,9 @@ import { Link, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { type RootState } from "../store/store";
 import {
-  Search,
   Stethoscope,
-  MapPin,
   FileText,
-  Clock,
-  Activity,
   ArrowRight,
-  CalendarDays,
-  Bot,
   HeartPulse,
   Building,
 } from "lucide-react";
@@ -51,51 +45,6 @@ const Dashboard: React.FC = () => {
       title: "Report Analysis",
       description: "Upload and analyze reports",
       link: "/report-analysis",
-    },
-  ];
-
-  const recentActivity = [
-    {
-      icon: <Search className="h-5 w-5 text-blue-500" />,
-      title: "Symptom check completed",
-      time: "2 hours ago",
-    },
-    {
-      icon: <MapPin className="h-5 w-5 text-indigo-500" />,
-      title: "Hospital search",
-      time: "1 day ago",
-    },
-    {
-      icon: <FileText className="h-5 w-5 text-rose-500" />,
-      title: "Report uploaded",
-      time: "3 days ago",
-    },
-  ];
-
-  const healthStats = [
-    {
-      icon: <CalendarDays className="h-6 w-6 text-indigo-500" />,
-      label: "Consultations",
-      value: "12",
-      change: "+2 this month",
-    },
-    {
-      icon: <Activity className="h-6 w-6 text-green-500" />,
-      label: "Health Score",
-      value: "85%",
-      change: "+5% improved",
-    },
-    {
-      icon: <FileText className="h-6 w-6 text-rose-500" />,
-      label: "Reports",
-      value: "8",
-      change: "3 pending review",
-    },
-    {
-      icon: <Clock className="h-6 w-6 text-gray-500" />,
-      label: "Last Checkup",
-      value: "2 weeks",
-      change: "Next due in 1 month",
     },
   ];
 
@@ -142,38 +91,6 @@ const Dashboard: React.FC = () => {
               ))}
             </div>
           </section>
-
-          {/* Health Overview */}
-          <section>
-            <h2 className="text-xl font-semibold text-gray-700 mb-4">
-              Health Overview
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {healthStats.map((stat) => (
-                <div
-                  key={stat.label}
-                  className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="bg-gray-100 p-3 rounded-lg">
-                        {stat.icon}
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">{stat.label}</p>
-                        <p className="text-2xl font-bold text-gray-800">
-                          {stat.value}
-                        </p>
-                      </div>
-                    </div>
-                    <p className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-full">
-                      {stat.change}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
         </div>
 
         {/* Right Column */}
@@ -194,47 +111,6 @@ const Dashboard: React.FC = () => {
               <span>Begin Journey</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
-          </section>
-
-          {/* Recent Activity */}
-          <section>
-            <h2 className="text-xl font-semibold text-gray-700 mb-4">
-              Recent Activity
-            </h2>
-            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm space-y-4">
-              {recentActivity.map((activity) => (
-                <div
-                  key={activity.title}
-                  className="flex items-center gap-4 p-2"
-                >
-                  <div className="bg-gray-100 p-2 rounded-lg">
-                    {activity.icon}
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-sm text-gray-800">
-                      {activity.title}
-                    </h4>
-                    <p className="text-xs text-gray-500">{activity.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Health Tip */}
-          <section className="bg-teal-50 border border-teal-200 rounded-xl p-6">
-            <div className="flex items-start gap-4">
-              <div className="bg-white p-3 rounded-lg border border-teal-200">
-                <Bot className="h-6 w-6 text-teal-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-teal-800">AI Health Tip</h3>
-                <p className="text-sm text-teal-700 mt-1">
-                  Stay hydrated by drinking at least 8 glasses of water daily.
-                  It's key for digestion and energy.
-                </p>
-              </div>
-            </div>
           </section>
         </div>
       </div>

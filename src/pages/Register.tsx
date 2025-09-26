@@ -100,7 +100,7 @@ const Register: React.FC = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    phoneNumber: "",
+    phone: "",
     password: "",
     confirmPassword: "",
     age: "",
@@ -123,7 +123,7 @@ const Register: React.FC = () => {
     const {
       name,
       email,
-      phoneNumber,
+      phone,
       password,
       confirmPassword,
       age,
@@ -132,7 +132,7 @@ const Register: React.FC = () => {
     } = formData;
 
     // --- Step 2: Use toasts for validation feedback ---
-    if (!name || !email || !password || !confirmPassword || !phoneNumber) {
+    if (!name || !email || !password || !confirmPassword || !phone) {
       toast.error("Please fill in all required fields.");
       return;
     }
@@ -154,7 +154,7 @@ const Register: React.FC = () => {
         name,
         email,
         password,
-        phoneNumber: `+91${phoneNumber}`,
+        phone: `+91${phone}`,
       };
       if (age) dataToSubmit.age = parseInt(age, 10);
       if (gender) dataToSubmit.gender = gender;
@@ -264,7 +264,7 @@ const Register: React.FC = () => {
 
             <div>
               <label
-                htmlFor="phoneNumber"
+                htmlFor="phone"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
                 Phone Number
@@ -275,11 +275,11 @@ const Register: React.FC = () => {
                 </span>
                 <input
                   type="tel"
-                  name="phoneNumber"
-                  id="phoneNumber"
+                  name="phone"
+                  id="phone"
                   className="w-full h-12 px-4 border border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  placeholder="98765 43210"
-                  value={formData.phoneNumber}
+                  placeholder="98XXXXXXXX"
+                  value={formData.phone}
                   onChange={handleInputChange}
                   required
                 />
