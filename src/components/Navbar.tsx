@@ -1,10 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
-import { useSelector, useDispatch } from "react-redux"; // Import useDispatch
+import { Link, useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
 import { type RootState } from "../store/store";
 import { logout } from "../store/slices/authSlice";
 import Logo from "../assets/logo.png";
-import { User, Menu, X, ChevronDown, LogOut, UserCircle } from "lucide-react"; // Added new icons
+import {
+  User,
+  Menu,
+  X,
+  ChevronDown,
+  LogOut,
+  UserCircle,
+  Stethoscope,
+  Users,
+} from "lucide-react";
 
 const Navbar: React.FC<{ onMenuClick?: () => void }> = ({ onMenuClick }) => {
   const { user, isAuthenticated } = useSelector(
@@ -13,8 +22,13 @@ const Navbar: React.FC<{ onMenuClick?: () => void }> = ({ onMenuClick }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const signupDropdownRef = useRef<HTMLDivElement>(null);
+  const loginDropdownRef = useRef<HTMLDivElement>(null);
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [isSignupDropdownOpen, setIsSignupDropdownOpen] = useState(false);
+  const [isLoginDropdownOpen, setIsLoginDropdownOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -31,6 +45,18 @@ const Navbar: React.FC<{ onMenuClick?: () => void }> = ({ onMenuClick }) => {
       ) {
         setIsUserDropdownOpen(false);
       }
+      if (
+        signupDropdownRef.current &&
+        !signupDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsSignupDropdownOpen(false);
+      }
+      if (
+        loginDropdownRef.current &&
+        !loginDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsLoginDropdownOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -39,7 +65,7 @@ const Navbar: React.FC<{ onMenuClick?: () => void }> = ({ onMenuClick }) => {
   const handleLogout = () => {
     dispatch(logout());
     setIsUserDropdownOpen(false);
-    navigate("/login"); // Redirect to login after logout
+    navigate("/login");
   };
 
   const navLinks = [
@@ -73,7 +99,7 @@ const Navbar: React.FC<{ onMenuClick?: () => void }> = ({ onMenuClick }) => {
         </div>
       </div>
 
-      {/* --- MODIFICATION START: User Dropdown Menu --- */}
+      {/* User Dropdown Menu */}
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
@@ -93,7 +119,6 @@ const Navbar: React.FC<{ onMenuClick?: () => void }> = ({ onMenuClick }) => {
             }`}
           />
         </button>
-        {/* --- Dropdown Panel --- */}
         {isUserDropdownOpen && (
           <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border z-10 overflow-hidden">
             <Link
@@ -114,13 +139,11 @@ const Navbar: React.FC<{ onMenuClick?: () => void }> = ({ onMenuClick }) => {
           </div>
         )}
       </div>
-      {/* --- MODIFICATION END --- */}
     </div>
   );
 
   // --- Logged-Out Guest Navbar ---
   const renderGuestNav = () => (
-    // ... (existing guest navbar code, no changes needed)
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="relative flex h-20 items-center justify-between">
         <div className="flex-shrink-0">
@@ -148,18 +171,77 @@ const Navbar: React.FC<{ onMenuClick?: () => void }> = ({ onMenuClick }) => {
         </div>
         <div className="flex items-center">
           <div className="hidden md:flex items-center gap-x-4">
-            <Link
-              to="/login"
-              className="text-sm font-medium border border-gray-100/50 px-4 py-2 rounded-lg text-white/90 transition-colors hover:text-white hover:bg-gray-100/10"
-            >
-              Login
-            </Link>
-            <Link
-              to="/register"
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-500"
-            >
-              Sign Up
-            </Link>
+            {/* Login Dropdown */}
+            <div className="relative" ref={loginDropdownRef}>
+              <button
+                onClick={() => setIsLoginDropdownOpen(!isLoginDropdownOpen)}
+                className="flex items-center gap-2 text-sm font-medium border border-gray-100/50 px-4 py-2 rounded-lg text-white/90 transition-colors hover:text-white hover:bg-gray-100/10"
+              >
+                Login
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform ${
+                    isLoginDropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+              {isLoginDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border z-10 overflow-hidden">
+                  <Link
+                    to="/login"
+                    onClick={() => setIsLoginDropdownOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <Users size={18} className="text-blue-600" />
+                    <span>Patient Login</span>
+                  </Link>
+                  <Link
+                    to="/doctor/login"
+                    onClick={() => setIsLoginDropdownOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <Stethoscope size={18} className="text-teal-600" />
+                    <span>Doctor Login</span>
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* Sign Up Dropdown */}
+            <div className="relative" ref={signupDropdownRef}>
+              <button
+                onClick={() => setIsSignupDropdownOpen(!isSignupDropdownOpen)}
+                className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-500"
+              >
+                Sign Up
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform ${
+                    isSignupDropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+              {isSignupDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border z-10 overflow-hidden">
+                  <Link
+                    to="/register"
+                    onClick={() => setIsSignupDropdownOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <Users size={18} className="text-blue-600" />
+                    <span>Patient Sign Up</span>
+                  </Link>
+                  <Link
+                    to="/doctor/register"
+                    onClick={() => setIsSignupDropdownOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <Stethoscope size={18} className="text-teal-600" />
+                    <span>Doctor Sign Up</span>
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
           <div className="md:hidden ml-4">
             <button
@@ -185,20 +267,47 @@ const Navbar: React.FC<{ onMenuClick?: () => void }> = ({ onMenuClick }) => {
           ))}
           <div className="border-t border-white/20 pt-4">
             <div className="space-y-4">
-              <Link
-                to="/login"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block w-full rounded-md border border-white/50 px-4 py-2 text-center font-semibold text-white transition hover:bg-white/10"
-              >
-                Login
-              </Link>
-              <Link
-                to="/register"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block w-full rounded-md bg-blue-600 px-4 py-2 text-center font-semibold text-white transition hover:bg-blue-500"
-              >
-                Sign Up
-              </Link>
+              {/* Mobile Login Section */}
+              <div className="space-y-2">
+                <p className="text-sm text-white/70 font-semibold">Login</p>
+                <Link
+                  to="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-2 w-full rounded-md border border-white/50 px-4 py-2 text-white transition hover:bg-white/10"
+                >
+                  <Users size={18} />
+                  <span>Patient Login</span>
+                </Link>
+                <Link
+                  to="/doctor/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-2 w-full rounded-md border border-white/50 px-4 py-2 text-white transition hover:bg-white/10"
+                >
+                  <Stethoscope size={18} />
+                  <span>Doctor Login</span>
+                </Link>
+              </div>
+
+              {/* Mobile Sign Up Section */}
+              <div className="space-y-2">
+                <p className="text-sm text-white/70 font-semibold">Sign Up</p>
+                <Link
+                  to="/register"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-2 w-full rounded-md bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-500"
+                >
+                  <Users size={18} />
+                  <span>Patient Sign Up</span>
+                </Link>
+                <Link
+                  to="/doctor/register"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-2 w-full rounded-md bg-teal-600 px-4 py-2 text-white transition hover:bg-teal-500"
+                >
+                  <Stethoscope size={18} />
+                  <span>Doctor Sign Up</span>
+                </Link>
+              </div>
             </div>
           </div>
         </div>

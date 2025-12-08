@@ -12,6 +12,9 @@ import {
 import storage from "redux-persist/lib/storage";
 import authReducer from "./slices/authSlice";
 
+import doctorAuthReducer from "./slices/doctorAuthSlice"; // Add this import
+
+
 // Configuration for redux-persist
 const persistConfig = {
   key: "root",
@@ -26,6 +29,7 @@ const persistedReducer = persistReducer(persistConfig, authReducer);
 export const store = configureStore({
   reducer: {
     auth: persistedReducer,
+    doctorAuth: doctorAuthReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

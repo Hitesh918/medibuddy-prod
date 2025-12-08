@@ -75,6 +75,19 @@ interface UpdateProfileData {
   daily_tips_delivery_time?: string;
 }
 
+// Patients API
+export const patientsAPI = {
+  getMappedPatients: (doctorPhone: string) =>
+    api.get(`/patients/mapped/${encodeURIComponent(doctorPhone)}`),
+};
+
+// Health Logs API
+export const healthLogsAPI = {
+  getLogsByPhone: (phone: string) =>
+    api.get(`/health-logs/${encodeURIComponent(phone)}`), // returns mealLogs + vitalLogs
+};
+
+
 // Auth API
 export const authAPI = {
   register: (userData: {
@@ -286,10 +299,22 @@ export const reportAPI = {
     });
   },
   getReports: (params?: any) => {
-    const userId = getUserId();
+    const { id: userId, phone: userPhone } = getUserDetails();
     if (!userId) return Promise.reject(new Error("User not logged in"));
-    return api.get(`/reports/${userId}`, { params });
+
+    // Add user_phone to params
+    const requestParams = {
+      ...params,
+      user_phone: userPhone,
+    };
+
+    return api.get(`/reports/${userId}`, { params: requestParams });
   },
+  // getReports: (params?: any) => {
+  //   const userId = getUserId();
+  //   if (!userId) return Promise.reject(new Error("User not logged in"));
+  //   return api.get(`/reports/${userId}`, { params });
+  // },
   getReport: (id: string) => {
     const userId = getUserId();
     if (!userId) return Promise.reject(new Error("User not logged in"));
@@ -354,5 +379,121 @@ export const prescriptionAPI = {
     return api.delete(`/reports/prescriptions/${userId}/${id}`);
   },
 };
+
+// Doctor APIS
+
+// ... (keep your existing code)
+
+// Create a separate axios instance for doctor APIs
+const doctorAPI = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+// Add doctor token to requests
+doctorAPI.interceptors.request.use((config) => {
+  const token = localStorage.getItem("doctorToken");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Doctor Authentication API
+export const doctorAuthAPI = {
+  register: (doctorData: {
+    name: string;
+    email: string;
+    password: string;
+    phone: string;
+    specialization: string;
+    licenseNumber: string;
+    hospital?: string;
+    experience?: number;
+  }) => doctorAPI.post("/doctor/auth/register", doctorData),
+
+  login: (credentials: { email: string; password: string }) =>
+    doctorAPI.post("/doctor/auth/login", credentials),
+
+  getProfile: () => doctorAPI.get("/doctor/auth/profile"),
+
+  updateProfile: (profileData: {
+    name?: string;
+    phone?: string;
+    specialization?: string;
+    hospital?: string;
+    experience?: number;
+  }) => doctorAPI.put("/doctor/auth/profile", profileData),
+};
+
+// Vault API
+export const vaultAPI = {
+  accessRecords: (pin: string) =>
+    doctorAPI.post("/doctor/vault/access", { pin }),
+
+  filterRecords: (pin: string, recordType?: string) =>
+    doctorAPI.post("/doctor/vault/access/filter", { pin, recordType }),
+
+  createMedicalRecord: (data: {
+    patientPhone: string;
+    patientName: string;
+    patientEmail?: string;
+    dateOfBirth?: string;
+    bloodGroup?: string;
+    allergies?: string[];
+    chronicConditions?: string[];
+    emergencyContact?: {
+      name: string;
+      phone: string;
+      relationship: string;
+    };
+  }) => doctorAPI.post("/doctor/vault/create", data),
+
+  addRecord: (
+    pin: string,
+    record: {
+      type: string;
+      title: string;
+      description?: string;
+      doctorName?: string;
+      hospitalName?: string;
+      files?: Array<{ url: string; filename: string }>;
+      date?: string;
+      notes?: string;
+    }
+  ) => doctorAPI.post("/doctor/vault/add-record", { pin, record }),
+};
+
+// Vault Pin API(patient side)
+export const vaultPinAPI = {
+  // Check if user has a vault PIN set up
+  checkStatus: () => api.get("/vault-pin/status"),
+
+  // Create/Setup a new vault PIN
+  setupPin: (pin: string, confirmPin: string) =>
+    api.post("/vault-pin/setup", { pin, confirmPin }),
+
+  // Update existing vault PIN
+  updatePin: (oldPin: string, newPin: string, confirmNewPin: string) =>
+    api.put("/vault-pin/update", { oldPin, newPin, confirmNewPin }),
+
+  // Remove/Disable vault PIN
+  removePin: (pin: string) =>
+    api.delete("/vault-pin/remove", { data: { pin } }),
+
+  // Verify PIN (for testing)
+  verifyPin: (pin: string) => api.post("/vault-pin/verify", { pin }),
+};
+
+// // Update the existing vaultAPI to keep using PIN
+// export const vaultAPI = {
+//   accessRecords: (pin: string) =>
+//     doctorAPI.post("/doctor/vault/access", { pin }),
+
+//   filterRecords: (pin: string, recordType?: string) =>
+//     doctorAPI.post("/doctor/vault/access/filter", { pin, recordType }),
+// };
 
 export default api;

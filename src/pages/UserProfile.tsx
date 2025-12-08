@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { profileAPI } from "../services/api";
+import VaultPinSetup from "../components/VaultPinSetup";
 import {
-  Phone,
+  User,
+  Shield,
+  Settings,
   Bell,
+  Phone,
   Sun,
   Pill,
   ShieldCheck,
@@ -74,7 +78,6 @@ const InfoRow: React.FC<{
   </div>
 );
 
-// --- NEW: Modern Toggle Switch Component ---
 const ToggleSwitch: React.FC<{
   enabled: boolean;
   onChange: (enabled: boolean) => void;
@@ -111,12 +114,20 @@ const ToggleRow: React.FC<{
   </div>
 );
 
-// --- Main Profile Page Component ---
+// --- Main Profile Page Component with Tabs ---
 const UserProfilePage: React.FC = () => {
   const [user, setUser] = useState<UserProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("profile");
+
+  const tabs = [
+    { id: "profile", label: "Profile Info", icon: <User size={20} /> },
+    { id: "vault", label: "Vault PIN", icon: <Shield size={20} /> },
+    { id: "settings", label: "Settings", icon: <Settings size={20} /> },
+    { id: "notifications", label: "Notifications", icon: <Bell size={20} /> },
+  ];
 
   useEffect(() => {
     const loadData = async () => {
@@ -136,15 +147,12 @@ const UserProfilePage: React.FC = () => {
     if (!user) return;
 
     const updatedValue = !user[field];
-    const originalUser = { ...user }; // Backup original state
-
-    // Optimistically update the UI
+    const originalUser = { ...user };
     setUser({ ...user, [field]: updatedValue });
 
     try {
       await profileAPI.updateProfile({ [field]: updatedValue });
     } catch (err) {
-      // If API call fails, revert the state and show an error
       setUser(originalUser);
       alert(`Failed to update ${field}. Please try again.`);
     }
@@ -168,119 +176,167 @@ const UserProfilePage: React.FC = () => {
   }
 
   return (
-    <>
-      <div className="bg-gray-50 min-h-screen p-4 sm:p-6 lg:p-8">
-        <div className="max-w-4xl mx-auto space-y-8">
-          {/* User Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-white text-3xl font-semibold">
-                {user.name ? user.name.charAt(0) : "U"}
-              </div>
-              <div>
-                <h1 className="text-3xl font-semibold text-gray-900">
-                  {user.name}
-                </h1>
-                <p className="text-gray-500">{user.email}</p>
-              </div>
-            </div>
-            <button
-              onClick={() => setEditModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-100"
-            >
-              <Edit size={16} /> Edit Profile
-            </button>
-          </div>
+    <div className="space-y-6 p-4">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-800">My Profile</h1>
+        <p className="mt-1 text-gray-500">
+          Manage your account settings and preferences
+        </p>
+      </div>
 
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="space-y-8">
-              {/* Personal Details */}
-              <ProfileCard title="Personal Information">
-                <InfoRow icon={Phone} label="Phone Number" value={user.phone} />
-                <InfoRow icon={Cake} label="Age" value={`${user.age} years`} />
-                <InfoRow
-                  icon={Droplets}
-                  label="Blood Group"
-                  value={user.blood_group}
-                />
-                <InfoRow
-                  icon={HeartPulse}
-                  label="Gender"
-                  value={
-                    user.gender === "male"
-                      ? "male"
-                      : user.gender === "female"
-                      ? "female"
-                      : "other"
-                  }
-                />
-              </ProfileCard>
+      {/* Tabs */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="border-b border-gray-200">
+          <nav className="flex overflow-x-auto">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-6 py-4 font-medium whitespace-nowrap transition ${
+                  activeTab === tab.id
+                    ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
+                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
 
-              {/* Preferences */}
-              <ProfileCard title="Settings & Preferences">
-                <InfoRow
-                  icon={Languages}
-                  label="Language"
-                  value={
-                    user.preferences?.language === "en" ? "English" : "Other"
-                  }
-                />
-                <ToggleRow
-                  icon={Bell}
-                  label="Email Notifications"
-                  isEnabled={!!user.preferences?.notifications?.email}
-                  onToggle={() => {
-                    /* Add specific logic if needed */
-                  }}
-                  fieldName="preferences" // Dummy fieldName
-                />
-                <ToggleRow
-                  icon={Sun}
-                  label="Daily Health Tips"
-                  isEnabled={!!user.daily_tips_enabled}
-                  onToggle={handleToggle}
-                  fieldName="daily_tips_enabled"
-                  details={`Delivered at ${user.daily_tips_delivery_time}`}
-                />
-              </ProfileCard>
-            </div>
-
-            {/* Active Reminders */}
-            <ProfileCard title="Active Medication Reminders">
-              <ToggleRow
-                icon={ShieldCheck}
-                label="Reminders Status"
-                isEnabled={!!user.reminders_enabled}
-                onToggle={handleToggle}
-                fieldName="reminders_enabled"
-              />
-              <hr />
-              {user.active_reminders && user.active_reminders.length > 0 ? (
-                user.active_reminders.map((reminder, index) => (
-                  <div key={index} className="flex items-start gap-4">
-                    <div className="mt-1 flex-shrink-0 bg-blue-100 p-2 rounded-full">
-                      <Pill className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900">
-                        {reminder.medicine}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {reminder.dosage || "As directed"}
-                      </p>
-                    </div>
+        {/* Tab Content */}
+        <div className="p-6">
+          {activeTab === "profile" && (
+            <>
+              {/* User Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-white text-3xl font-semibold">
+                    {user.name ? user.name.charAt(0) : "U"}
                   </div>
-                ))
-              ) : (
-                <p className="text-sm text-center text-gray-500 py-4">
-                  No active reminders found.
-                </p>
-              )}
-            </ProfileCard>
-          </div>
+                  <div>
+                    <h1 className="text-3xl font-semibold text-gray-900">
+                      {user.name}
+                    </h1>
+                    <p className="text-gray-500">{user.email}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setEditModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-100"
+                >
+                  <Edit size={16} /> Edit Profile
+                </button>
+              </div>
+
+              {/* Main Content Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="space-y-8">
+                  <ProfileCard title="Personal Information">
+                    <InfoRow
+                      icon={Phone}
+                      label="Phone Number"
+                      value={user.phone}
+                    />
+                    <InfoRow
+                      icon={Cake}
+                      label="Age"
+                      value={`${user.age} years`}
+                    />
+                    <InfoRow
+                      icon={Droplets}
+                      label="Blood Group"
+                      value={user.blood_group}
+                    />
+                    <InfoRow
+                      icon={HeartPulse}
+                      label="Gender"
+                      value={user.gender}
+                    />
+                  </ProfileCard>
+
+                  <ProfileCard title="Settings & Preferences">
+                    <InfoRow
+                      icon={Languages}
+                      label="Language"
+                      value={
+                        user.preferences?.language === "en"
+                          ? "English"
+                          : "Other"
+                      }
+                    />
+                    <ToggleRow
+                      icon={Sun}
+                      label="Daily Health Tips"
+                      isEnabled={!!user.daily_tips_enabled}
+                      onToggle={handleToggle}
+                      fieldName="daily_tips_enabled"
+                      details={`Delivered at ${user.daily_tips_delivery_time}`}
+                    />
+                  </ProfileCard>
+                </div>
+
+                <ProfileCard title="Active Medication Reminders">
+                  <ToggleRow
+                    icon={ShieldCheck}
+                    label="Reminders Status"
+                    isEnabled={!!user.reminders_enabled}
+                    onToggle={handleToggle}
+                    fieldName="reminders_enabled"
+                  />
+                  <hr />
+                  {user.active_reminders?.length ? (
+                    user.active_reminders.map((r, i) => (
+                      <div key={i} className="flex items-start gap-4">
+                        <div className="mt-1 flex-shrink-0 bg-blue-100 p-2 rounded-full">
+                          <Pill className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">
+                            {r.medicine}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {r.dosage || "As directed"}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-center text-gray-500 py-4">
+                      No active reminders found.
+                    </p>
+                  )}
+                </ProfileCard>
+              </div>
+            </>
+          )}
+
+          {activeTab === "vault" && <VaultPinSetup />}
+
+          {activeTab === "settings" && (
+            <div className="text-gray-600">
+              <h2 className="text-xl font-bold text-gray-800 mb-4">
+                Account Settings
+              </h2>
+              <p>Coming soon: Manage account-level configurations here.</p>
+            </div>
+          )}
+
+          {activeTab === "notifications" && (
+            <div className="text-gray-600">
+              <h2 className="text-xl font-bold text-gray-800 mb-4">
+                Notification Preferences
+              </h2>
+              <p>
+                Coming soon: Configure email, SMS, and app notifications here.
+              </p>
+            </div>
+          )}
         </div>
       </div>
+
       {isEditModalOpen && (
         <EditProfileModal
           user={user}
@@ -291,7 +347,7 @@ const UserProfilePage: React.FC = () => {
           }}
         />
       )}
-    </>
+    </div>
   );
 };
 
@@ -322,7 +378,7 @@ const EditProfileModal: React.FC<{
     try {
       const response = await profileAPI.updateProfile(formData);
       onSave(response.data.user);
-    } catch (error) {
+    } catch {
       alert("Failed to update profile. Please try again.");
     } finally {
       setIsSaving(false);
@@ -346,8 +402,8 @@ const EditProfileModal: React.FC<{
               <X size={20} />
             </button>
           </div>
+
           <div className="p-6 space-y-4">
-            {/* Form Fields */}
             <div>
               <label className="text-sm font-medium text-gray-700">Name</label>
               <input
@@ -396,6 +452,7 @@ const EditProfileModal: React.FC<{
               </select>
             </div>
           </div>
+
           <div className="p-4 border-t flex justify-end gap-3 bg-gray-50">
             <button
               type="button"

@@ -1,117 +1,197 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { type RootState } from "../store/store";
-import {
-  Stethoscope,
-  FileText,
-  ArrowRight,
-  HeartPulse,
-  Building,
-} from "lucide-react";
+import { Stethoscope, ArrowRight } from "lucide-react";
+import { healthLogsAPI } from "../services/api";
 
 const Dashboard: React.FC = () => {
   const { user, isAuthenticated } = useSelector(
     (state: RootState) => state.auth
   );
 
+  const [logs, setLogs] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Hardcoded patient phone for now
+  const TEST_PHONE = "+918088625479";
+
+  useEffect(() => {
+    const fetchLogs = async () => {
+      try {
+        const res = await healthLogsAPI.getLogsByPhone(TEST_PHONE);
+        setLogs(res.data);
+      } catch (err) {
+        console.error("Error fetching logs:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLogs();
+  }, []);
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  // --- Re-themed Data for the New Design ---
-
-  const quickActions = [
-    {
-      icon: <HeartPulse className="h-7 w-7 text-blue-600" />,
-      title: "Symptom Checker",
-      description: "Analyze your symptoms with AI",
-      link: "/symptom-checker",
-    },
-    {
-      icon: <Stethoscope className="h-7 w-7 text-teal-600" />,
-      title: "Find Treatments",
-      description: "Search for medical procedures",
-      link: "/treatments",
-    },
-    {
-      icon: <Building className="h-7 w-7 text-indigo-600" />,
-      title: "Hospital Finder",
-      description: "Locate nearby hospitals & clinics",
-      link: "/hospitals",
-    },
-    {
-      icon: <FileText className="h-7 w-7 text-rose-600" />,
-      title: "Report Analysis",
-      description: "Upload and analyze reports",
-      link: "/report-analysis",
-    },
-  ];
-
   return (
     <div className="space-y-8 p-2 md:p-4">
-      {/* Welcome Header */}
+      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-800">
           Welcome back, {user?.name}!
         </h1>
         <p className="mt-1 text-gray-500">
-          Ready to take charge of your health today?
+          Here's your latest health activity summary
         </p>
       </div>
 
-      {/* Main Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column */}
         <div className="lg:col-span-2 space-y-8">
-          {/* Quick Actions */}
-          <section>
-            <h2 className="text-xl font-semibold text-gray-700 mb-4">
-              Quick Actions
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {quickActions.map((action) => (
-                <Link
-                  key={action.title}
-                  to={action.link}
-                  className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-lg hover:border-blue-400 transition-all duration-300 flex items-center gap-5"
-                >
-                  <div className="bg-gray-100 p-3 rounded-lg">
-                    {action.icon}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-800">
-                      {action.title}
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                      {action.description}
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        </div>
+          
+<section>
+  <h2 className="text-xl font-semibold text-gray-700 mb-4">
+    Your Recent Health Logs
+  </h2>
 
-        {/* Right Column */}
-        <div className="space-y-8">
-          {/* Start Your Treatment Journey */}
-          <section className="bg-blue-600 rounded-xl p-6 text-white text-center shadow-lg md:mt-11">
-            <div className="mx-auto h-12 w-12 rounded-full bg-white/20 flex items-center justify-center mb-4">
-              <Stethoscope className="h-6 w-6" />
-            </div>
-            <h2 className="text-lg font-semibold">Start a Treatment Journey</h2>
-            <p className="text-sm text-blue-100 mt-1 mb-4">
-              Find doctors and book consultations.
-            </p>
-            <Link
-              to="/treatment-journey"
-              className="bg-white text-blue-600 px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
-            >
-              <span>Begin Journey</span>
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </section>
+  {loading ? (
+    <div className="p-6 text-center">
+      <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+      <p className="text-gray-500 mt-2">Loading logs…</p>
+    </div>
+  ) : logs ? (
+    <div className="space-y-10">
+
+      {/* Meal Logs */}
+      <div>
+        <h3 className="text-lg font-semibold text-gray-800 mb-3">
+          🍽️ Meal Logs
+        </h3>
+
+        {logs.mealLogs.length === 0 ? (
+          <p className="text-gray-500 text-sm">No meal logs found.</p>
+        ) : (
+          <div className="space-y-4">
+            {logs.mealLogs.map((log: any) => (
+              <div
+                key={log._id}
+                className="bg-white border border-gray-200 p-5 rounded-xl shadow-sm"
+              >
+                <p className="text-base font-semibold text-gray-800">
+                  {log.date} — {log.time}
+                </p>
+
+                <div className="grid grid-cols-2 gap-2 mt-2 text-sm text-gray-700">
+                  <p><strong>Meal Type:</strong> {log.meal_type}</p>
+                  <p><strong>Input:</strong> {log.input_type}</p>
+                </div>
+
+                {log.description && (
+                  <p className="mt-2 text-gray-700 text-sm">
+                    <strong>Description:</strong> {log.description}
+                  </p>
+                )}
+
+                <div className="grid grid-cols-2 md:grid-cols-3 mt-3 gap-2 text-sm text-gray-700">
+                  <p><strong>Calories:</strong> {log.total_calories}</p>
+                  <p><strong>Carbs:</strong> {log.carbs_g}g</p>
+                  <p><strong>Protein:</strong> {log.protein_g}g</p>
+                  <p><strong>Fats:</strong> {log.fats_g}g</p>
+                  <p><strong>Health Score:</strong> {log.health_score}</p>
+                </div>
+
+                {log.items?.length > 0 && (
+                  <p className="mt-3 text-sm text-gray-700">
+                    <strong>Items:</strong> {log.items.join(", ")}
+                  </p>
+                )}
+
+                {log.analysis?.brief_assessment && (
+                  <p className="mt-3 text-sm text-gray-700">
+                    <strong>Assessment:</strong> {log.analysis.brief_assessment}
+                  </p>
+                )}
+
+                {log.analysis?.top_suggestion && (
+                  <p className="mt-1 text-sm text-gray-700">
+                    <strong>Suggestion:</strong> {log.analysis.top_suggestion}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Vital Logs */}
+      <div>
+        <h3 className="text-lg font-semibold text-gray-800 mb-3">
+          📊 Vital Logs
+        </h3>
+
+        {logs.vitalLogs.length === 0 ? (
+          <p className="text-gray-500 text-sm">No vital logs found.</p>
+        ) : (
+          <div className="space-y-4">
+            {logs.vitalLogs.map((log: any) => (
+              <div
+                key={log._id}
+                className="bg-white border border-gray-200 p-5 rounded-xl shadow-sm"
+              >
+                <p className="text-base font-semibold text-gray-800">
+                  {log.date} — {log.time}
+                </p>
+
+                <div className="grid grid-cols-2 gap-2 mt-2 text-sm text-gray-700">
+                  <p><strong>Type:</strong> {log.type}</p>
+                  <p><strong>Input:</strong> {log.input_type}</p>
+                </div>
+
+                {log.description && (
+                  <p className="mt-2 text-gray-700 text-sm">
+                    <strong>Description:</strong> {log.description}
+                  </p>
+                )}
+
+                <div className="grid grid-cols-2 md:grid-cols-3 mt-3 gap-2 text-sm text-gray-700">
+                  <p><strong>Calories:</strong> {log.calories_consumed}</p>
+                  <p><strong>Carbs:</strong> {log.carbs_g}g</p>
+                  <p><strong>Protein:</strong> {log.protein_g}g</p>
+                  <p><strong>Fats:</strong> {log.fats_g}g</p>
+                  <p><strong>Health Score:</strong> {log.health_score}</p>
+                </div>
+
+                {log.items?.length > 0 && (
+                  <p className="mt-3 text-sm text-gray-700">
+                    <strong>Items:</strong> {log.items.join(", ")}
+                  </p>
+                )}
+
+                {log.analysis?.brief_assessment && (
+                  <p className="mt-3 text-sm text-gray-700">
+                    <strong>Assessment:</strong> {log.analysis.brief_assessment}
+                  </p>
+                )}
+
+                {log.analysis?.top_suggestion && (
+                  <p className="mt-1 text-sm text-gray-700">
+                    <strong>Suggestion:</strong> {log.analysis.top_suggestion}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+    </div>
+  ) : (
+    <p className="text-gray-500">No logs found.</p>
+  )}
+</section>
+
         </div>
       </div>
     </div>
