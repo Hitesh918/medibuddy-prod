@@ -426,6 +426,13 @@ export const doctorAuthAPI = {
     hospital?: string;
     experience?: number;
   }) => doctorAPI.put("/doctor/auth/profile", profileData),
+
+  sendOtp: (data: { phone: string }) =>
+  doctorAPI.post("/doctor/auth/send-otp", data),
+
+verifyOtp: (data: { phone: string; otp: string }) =>
+  doctorAPI.post("/doctor/auth/verify-otp", data),
+
 };
 
 // Vault API

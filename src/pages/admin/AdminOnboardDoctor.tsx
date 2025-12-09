@@ -50,13 +50,15 @@ const AdminOnboardDoctor: React.FC = () => {
     setForm({ ...form, imageFile: e.target.files[0] });
   };
 
-  const handleArrayChange = (index: number, field: string, value: string) => {
-    setForm({
-      ...form,
-      [field]: form[field].map((item: any, i: number) =>
-        i === index ? value : item
-      ),
-    });
+  const handleArrayChange = (
+    index: number,
+    field: "specialties" | "languages",
+    value: string
+  ) => {
+    setForm((prev) => ({
+      ...prev,
+      [field]: (prev[field] as string[]).map((item, i) => (i === index ? value : item)),
+    }));
   };
 
   const handleSubmit = async (e: any) => {

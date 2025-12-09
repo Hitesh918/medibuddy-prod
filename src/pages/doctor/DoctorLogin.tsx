@@ -4,64 +4,14 @@ import { useDispatch } from "react-redux";
 import toast, { Toaster } from "react-hot-toast";
 import { setDoctorCredentials } from "../../store/slices/doctorAuthSlice";
 import { doctorAuthAPI } from "../../services/api";
-import { Eye, EyeOff, Stethoscope } from "lucide-react";
+import { Stethoscope } from "lucide-react";
 import Logo from "../../assets/logo.png";
 
-const PasswordField = ({
-  id,
-  label,
-  value,
-  onChange,
-  name,
-  required = false,
-  placeholder = "",
-}: {
-  id: string;
-  label: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  name: string;
-  required?: boolean;
-  placeholder?: string;
-}) => {
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-
-  return (
-    <div>
-      <label
-        htmlFor={id}
-        className="block text-sm font-medium text-gray-700 mb-1"
-      >
-        {label}
-      </label>
-      <div className="relative">
-        <input
-          id={id}
-          name={name}
-          type={isPasswordVisible ? "text" : "password"}
-          value={value}
-          onChange={onChange}
-          required={required}
-          placeholder={placeholder}
-          className="w-full h-12 px-4 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
-        />
-        <button
-          type="button"
-          onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-          className="absolute inset-y-0 right-0 flex items-center px-4 text-gray-500 hover:text-gray-700"
-          aria-label={isPasswordVisible ? "Hide password" : "Show password"}
-        >
-          {isPasswordVisible ? <EyeOff size={20} /> : <Eye size={20} />}
-        </button>
-      </div>
-    </div>
-  );
-};
-
 const DoctorLogin: React.FC = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -69,22 +19,65 @@ const DoctorLogin: React.FC = () => {
 
   const from = location.state?.from?.pathname || "/doctor/dashboard";
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // ----------------------------
+  // SEND OTP
+  // ----------------------------
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email || !password) {
-      toast.error("Please fill in all fields");
+    if (!phone) {
+      toast.error("Please enter phone number");
+      return;
+    }    
+    const formattedPhone = phone.startsWith("+91") ? phone : `+91${phone}`;
+
+    setLoading(true);
+    const loadingToastId = toast.loading("Sending OTP...");
+
+    try {
+      await doctorAuthAPI.sendOtp({ phone : formattedPhone });
+
+      toast.success("OTP sent successfully!", { id: loadingToastId });
+      setOtpSent(true);
+
+    }catch (err: any) {
+  const status = err.response?.status;
+  const msg = err.response?.data?.error;
+
+  if (status === 404) {
+    toast.error("Doctor not found. Please register first.", {
+      id: loadingToastId,
+    });
+  } else {
+    toast.error(msg || "Failed to send OTP.", {
+      id: loadingToastId,
+    });
+  }
+} finally {
+      setLoading(false);
+    }
+  };
+
+  // ----------------------------
+  // VERIFY OTP
+  // ----------------------------
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!otp) {
+      toast.error("Enter the OTP");
       return;
     }
 
     setLoading(true);
-    const loadingToastId = toast.loading("Signing in...");
+    const loadingToastId = toast.loading("Verifying OTP...");
 
     try {
-      const response = await doctorAuthAPI.login({ email, password });
+      let formattedPhone = phone.startsWith("+91") ? phone : `+91${phone}`;
+      const response = await doctorAuthAPI.verifyOtp({ phone : formattedPhone, otp });
 
       localStorage.setItem("doctorToken", response.data.token);
-
+      localStorage.setItem("doctorInfo", JSON.stringify(response.data.doctor));
 
       dispatch(
         setDoctorCredentials({
@@ -93,149 +86,170 @@ const DoctorLogin: React.FC = () => {
         })
       );
 
-      toast.success("Login successful! Redirecting...", { id: loadingToastId });
+      toast.success("Login successful!", { id: loadingToastId });
 
-      setTimeout(() => {
-        navigate(from, { replace: true });
-      }, 1000);
+      navigate(from, { replace: true });
+
     } catch (err: any) {
-      toast.error(
-        err.response?.data?.error ||
-          "Login failed. Please check your credentials.",
-        { id: loadingToastId }
-      );
+      toast.error(err.response?.data?.error || "Invalid OTP.", {
+        id: loadingToastId,
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="h-screen bg-white overflow-hidden lg:grid lg:grid-cols-2">
-      <Toaster position="top-right" reverseOrder={false} />
+return (
+  <div className="h-screen bg-white overflow-hidden lg:grid lg:grid-cols-2">
+    <Toaster position="top-right" />
 
-      {/* Left Content Panel */}
-      <div className="relative hidden w-full h-full flex-col justify-between bg-gradient-to-br from-teal-900 to-cyan-900 p-8 text-white lg:flex">
-        <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-teal-500/30 rounded-full blur-3xl opacity-50"></div>
-        <div className="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-cyan-500/30 rounded-full blur-3xl opacity-50"></div>
+    {/* LEFT PANEL — Beautiful gradient like sample UI */}
+    <div className="relative hidden w-full h-full flex-col justify-between bg-gradient-to-br from-slate-900 to-teal-900 p-8 text-white lg:flex">
+      {/* Blurred decoration */}
+      <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-teal-500/30 rounded-full blur-3xl opacity-50"></div>
+      <div className="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-green-500/30 rounded-full blur-3xl opacity-50"></div>
 
-        <div className="relative z-10">
-          <Link to="/" className="flex items-center gap-2">
-            <img src={Logo} alt="Mediimate company logo" className="h-8 w-8" />
-            <span className="text-2xl font-bold">MediiMate</span>
-          </Link>
-          <div className="mt-12 flex items-center gap-3">
-            <div className="bg-white/20 p-3 rounded-lg backdrop-blur-sm">
-              <Stethoscope className="h-8 w-8" />
-            </div>
-            <h1 className="text-4xl font-bold tracking-tight">Doctor Portal</h1>
-          </div>
-          <p className="mt-4 text-lg text-teal-200">
-            Sign in to access patient medical records securely and manage your
-            consultations.
-          </p>
+      <div className="relative z-10">
+        <div className="flex items-center gap-2">
+          <Stethoscope className="h-8 w-8 text-teal-300" />
+          <span className="text-2xl font-bold">MediiMate • Doctors</span>
         </div>
 
-        <div className="relative z-10 mt-auto">
-          <div className="rounded-xl bg-black/20 p-6 backdrop-blur-sm">
-            <blockquote>
-              "The vault system has transformed how I access patient records.
-              It's secure, fast, and incredibly convenient during emergencies."
-            </blockquote>
-            <footer className="mt-4 flex items-center gap-4">
-              <img
-                className="h-12 w-12 rounded-full object-cover"
-                src="https://i.pravatar.cc/150?img=33"
-                alt="Dr. Smith"
-              />
-              <div>
-                <p className="font-semibold text-white">Dr. Sarah Smith</p>
-                <p className="text-sm text-teal-200">Cardiologist</p>
-              </div>
-            </footer>
-          </div>
-        </div>
+        <h1 className="mt-12 text-4xl font-bold tracking-tight">
+          Welcome Back, Doctor.
+        </h1>
+        <p className="mt-4 text-lg text-teal-200">
+          Sign in securely with OTP authentication.
+        </p>
       </div>
 
-      {/* Right Form Panel */}
-      <div className="flex w-full h-full flex-col justify-center p-8 overflow-y-auto">
-        <div className="mx-auto w-full max-w-sm">
-          <h2 className="text-3xl font-bold text-gray-900">
-            Sign in to Doctor Portal
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Don't have an account?{" "}
-            <Link
-              to="/doctor/register"
-              className="font-medium text-teal-600 hover:text-teal-500"
-            >
-              Register here
-            </Link>
-          </p>
-
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
-                placeholder="doctor@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-
-            <PasswordField
-              id="password"
-              name="password"
-              label="Password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
+      <div className="relative z-10 mt-auto">
+        <div className="rounded-xl bg-black/20 p-6 backdrop-blur-sm">
+          <blockquote>
+            "OTP login makes my workflow smoother. No passwords, no hassle."
+          </blockquote>
+          <footer className="mt-4 flex items-center gap-4">
+            <img
+              className="h-12 w-12 rounded-full object-cover"
+              src="https://i.pravatar.cc/150?img=12"
+              alt="Doctor"
             />
-
             <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full h-12 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700 transition-all flex items-center justify-center disabled:opacity-50"
-              >
-                {loading ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  "Sign in"
-                )}
-              </button>
+              <p className="font-semibold text-white">Dr. Alicia</p>
+              <p className="text-sm text-teal-200">Verified Practitioner</p>
             </div>
-
-            <div className="relative flex py-2 items-center">
-              <div className="flex-grow border-t border-gray-300"></div>
-              <span className="flex-shrink mx-4 text-gray-400 text-sm">OR</span>
-              <div className="flex-grow border-t border-gray-300"></div>
-            </div>
-
-            <div>
-              <Link
-                to="/login"
-                className="w-full h-12 flex items-center justify-center rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-all"
-              >
-                Patient Login
-              </Link>
-            </div>
-          </form>
+          </footer>
         </div>
       </div>
     </div>
-  );
+
+    {/* RIGHT FORM PANEL */}
+    <div className="flex w-full h-full flex-col justify-center p-8 overflow-y-auto">
+      <div className="mx-auto w-full max-w-sm">
+
+        <h2 className="text-3xl font-bold text-gray-900">
+          Doctor Login
+        </h2>
+
+        <p className="mt-2 text-sm text-gray-600">
+          Don’t have an account?{" "}
+          <Link
+            to="/doctor/register"
+            className="font-medium text-teal-600 hover:text-teal-500"
+          >
+            Register here
+          </Link>
+        </p>
+
+        {/* --- FORM LOGIC stays SAME --- */}
+        <form
+          className="mt-8 space-y-6"
+          onSubmit={otpSent ? handleVerifyOtp : handleSendOtp}
+        >
+          {/* PHONE INPUT */}
+          {!otpSent && (
+            <div>
+              <label
+                htmlFor="phone"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Phone Number
+              </label>
+
+              <div className="mt-1 flex rounded-md shadow-sm">
+                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                  +91
+                </span>
+                <input
+                  id="phone"
+                  type="tel"
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full h-12 px-4 border border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  placeholder="Enter 10-digit number"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* OTP INPUT */}
+          {otpSent && (
+            <div>
+              <label
+                htmlFor="otp"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Enter OTP
+              </label>
+              <input
+                id="otp"
+                type="text"
+                required
+                maxLength={6}
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                className="mt-1 w-full h-12 px-4 text-center tracking-[0.6em] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                placeholder="••••••"
+              />
+            </div>
+          )}
+
+          {/* BUTTON */}
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full h-12 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700 transition-all flex items-center justify-center disabled:opacity-50"
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : otpSent ? (
+                "Verify OTP"
+              ) : (
+                "Send OTP"
+              )}
+            </button>
+          </div>
+
+          {/* Back to phone number */}
+          {otpSent && (
+            <div className="mt-4 text-center text-sm">
+              <button
+                type="button"
+                onClick={() => setOtpSent(false)}
+                className="font-medium text-teal-600 hover:text-teal-500"
+              >
+                Use a different number
+              </button>
+            </div>
+          )}
+        </form>
+      </div>
+    </div>
+  </div>
+);
+
 };
 
 export default DoctorLogin;
