@@ -30,9 +30,9 @@ const Sidebar: React.FC = () => {
     {
       to: "/symptom-checker",
       icon: <HeartPulse size={20} />,
-      label: "Symptom Checker",
+      label: "FREYA",
     },
-    { to: "/treatments", icon: <Stethoscope size={20} />, label: "Treatments" },
+    { to: "/treatments", icon: <Stethoscope size={20} />, label: "Doctors" },
     // { to: "/hospitals", icon: <Building size={20} />, label: "Hospitals" },
     {
       to: "/mealLogs",

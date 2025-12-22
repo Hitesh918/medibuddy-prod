@@ -5,7 +5,6 @@ import toast, { Toaster } from "react-hot-toast";
 import { setDoctorCredentials } from "../../store/slices/doctorAuthSlice";
 import { doctorAuthAPI } from "../../services/api";
 import { Stethoscope } from "lucide-react";
-import Logo from "../../assets/logo.png";
 
 const DoctorLogin: React.FC = () => {
   const [phone, setPhone] = useState("");
@@ -76,9 +75,12 @@ const DoctorLogin: React.FC = () => {
       let formattedPhone = phone.startsWith("+91") ? phone : `+91${phone}`;
       const response = await doctorAuthAPI.verifyOtp({ phone : formattedPhone, otp });
 
+      // Save to localStorage
       localStorage.setItem("doctorToken", response.data.token);
-      localStorage.setItem("doctorInfo", JSON.stringify(response.data.doctor));
+      localStorage.setItem("doctor", JSON.stringify(response.data.doctor));
+      localStorage.setItem("doctorPhone", formattedPhone);
 
+      // Dispatch to Redux store
       dispatch(
         setDoctorCredentials({
           doctor: response.data.doctor,

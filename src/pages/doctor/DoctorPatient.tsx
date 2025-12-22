@@ -250,7 +250,7 @@ const calorieData = Object.entries(calorieMap)
     </div>
 
     {/* Stats */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {stats.map((stat, index) => (
         <div
           key={index}
@@ -263,7 +263,7 @@ const calorieData = Object.entries(calorieMap)
           <p className="text-sm text-gray-600 mt-3">{stat.label}</p>
         </div>
       ))}
-    </div>
+    </div> */}
 
     {/* Search + Filter */}
     <div className="bg-white rounded-xl border border-gray-200 p-4">
@@ -311,7 +311,7 @@ const calorieData = Object.entries(calorieMap)
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-4 flex-1">
                 <img
-                  src={patient.avatar}
+                  src={"/av.png"}
                   alt={patient.name}
                   className="h-16 w-16 rounded-full object-cover"
                 />

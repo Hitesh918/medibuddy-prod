@@ -1,4 +1,4 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import {
   persistStore,
   persistReducer,
@@ -11,26 +11,27 @@ import {
 } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import authReducer from "./slices/authSlice";
-
-import doctorAuthReducer from "./slices/doctorAuthSlice"; // Add this import
-
+import doctorAuthReducer from "./slices/doctorAuthSlice";
 
 // Configuration for redux-persist
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["auth"],
+  whitelist: ["auth", "doctorAuth"], // Persist both auth and doctorAuth
 };
 
+// Combine reducers
+const rootReducer = combineReducers({
+  auth: authReducer,
+  doctorAuth: doctorAuthReducer,
+});
+
 // Create a persisted reducer
-const persistedReducer = persistReducer(persistConfig, authReducer);
+const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 // Configure the store
 export const store = configureStore({
-  reducer: {
-    auth: persistedReducer,
-    doctorAuth: doctorAuthReducer,
-  },
+  reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {

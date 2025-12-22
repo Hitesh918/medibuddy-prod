@@ -121,6 +121,9 @@ export const authAPI = {
 
   checkUserExists: (phone: string) =>
     api.get("/auth/profile", { params: { phone } }),
+
+  getPatientByPhone: (phone: string) =>
+    api.get(`/auth/patient/${encodeURIComponent(phone)}`),
 };
 
 // --- MODIFIED: Profile API ---
@@ -182,6 +185,9 @@ export const aiAPI = {
 
   sendChatMessage: (message: string, userLocation?: any) =>
     api.post("/ai/chatbot", { message, userLocation }),
+
+  analyzeMealTrends: (foodLogs: any[]) =>
+    api.post("/ai/analyze-meal-trends", { foodLogs }),
 };
 
 // Treatments API
@@ -441,13 +447,46 @@ verifyOtp: (data: { phone: string; otp: string }) =>
 
 };
 
+// Doctor Availability API
+export const doctorAvailabilityAPI = {
+  // Set / Update today's availability
+  setTodayAvailability: (data: {
+    phone: string;
+    hospitals: Record<string, string[]>;
+  }) =>
+    doctorAPI.post("/doctors/availability/today", data),
+
+getTodayAvailability: (phone: string) =>
+  doctorAPI.get("/doctors/availability/today", {
+    params: { phone },
+  }),
+};
+
+// Appointments API
+export const appointmentAPI = {
+  // Get all appointments for a doctor (path param)
+  getByDoctorPhone: (doctorPhone: string) =>
+    api.get(
+      `/doctors/appointments/${encodeURIComponent(doctorPhone)}`
+    ),
+};
+
+// Doctors API
+export const doctorsAPI = {
+  // Get doctor by phone number
+  getByPhone: (phone: string) =>
+    api.get(`/doctors/by-phone/${encodeURIComponent(phone)}`),
+};
+
+
+
 // Vault API
 export const vaultAPI = {
-  accessRecords: (pin: string) =>
-    doctorAPI.post("/doctor/vault/access", { pin }),
+  accessRecords: (email: string, mpin: string, doctorPhone: string) =>
+    doctorAPI.post("/doctor/vault/access", { email, mpin, doctorPhone }),
 
-  filterRecords: (pin: string, recordType?: string) =>
-    doctorAPI.post("/doctor/vault/access/filter", { pin, recordType }),
+  filterRecords: (email: string, mpin: string, doctorPhone: string, recordType?: string) =>
+    doctorAPI.post("/doctor/vault/access/filter", { email, mpin, doctorPhone, recordType }),
 
   createMedicalRecord: (data: {
     patientPhone: string;
@@ -465,7 +504,9 @@ export const vaultAPI = {
   }) => doctorAPI.post("/doctor/vault/create", data),
 
   addRecord: (
-    pin: string,
+    email: string,
+    mpin: string,
+    doctorPhone: string,
     record: {
       type: string;
       title: string;
@@ -476,7 +517,7 @@ export const vaultAPI = {
       date?: string;
       notes?: string;
     }
-  ) => doctorAPI.post("/doctor/vault/add-record", { pin, record }),
+  ) => doctorAPI.post("/doctor/vault/add-record", { email, mpin, doctorPhone, record }),
 };
 
 // Vault Pin API(patient side)

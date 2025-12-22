@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import { authAPI } from "../services/api";
 import Logo from "../assets/logo.png";
-import { Heart } from "lucide-react";
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -27,9 +26,9 @@ const Register: React.FC = () => {
   ) => {
     const { name, value } = e.target;
 
-    // Force MPIN to be only digits
+    // Force MPIN to be only digits (6 digits)
     if (name === "mpin") {
-      if (!/^\d{0,4}$/.test(value)) return;
+      if (!/^\d{0,6}$/.test(value)) return;
     }
 
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -48,8 +47,8 @@ const Register: React.FC = () => {
       return;
     }
 
-    if (mpin.length !== 4) {
-      toast.error("MPIN must be exactly 4 digits.");
+    if (mpin.length !== 6) {
+      toast.error("MPIN must be exactly 6 digits.");
       return;
     }
 
@@ -91,8 +90,8 @@ const Register: React.FC = () => {
       return;
     }
 
-    if (mpin.length !== 4) {
-      toast.error("MPIN must be exactly 4 digits.");
+    if (mpin.length !== 6) {
+      toast.error("MPIN must be exactly 6 digits.");
       return;
     }
 
@@ -216,7 +215,7 @@ const Register: React.FC = () => {
                       value={formData.phone}
                       onChange={handleInputChange}
                       className="w-full h-12 px-4 border rounded-r-lg"
-                      placeholder="98XXXXXXXX"
+                      placeholder="XXXXXXXXXX"
                     />
                   </div>
                 </div>
@@ -224,17 +223,17 @@ const Register: React.FC = () => {
                 {/* MPIN */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Create MPIN (4-digit)
+                    Create MPIN (6-digit)
                   </label>
                   <input
                     name="mpin"
                     type="password"
-                    maxLength={4}
+                    maxLength={6}
                     required
                     value={formData.mpin}
                     onChange={handleInputChange}
-                    className="w-full h-12 px-4 text-center tracking-[0.4em] border rounded-lg"
-                    placeholder="••••"
+                    className="w-full h-12 px-4 text-center tracking-[0.5em] border rounded-lg"
+                    placeholder="••••••"
                   />
                 </div>
               </>

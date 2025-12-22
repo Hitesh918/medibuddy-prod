@@ -1,81 +1,80 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Calendar,
   Clock,
-  User,
   MapPin,
-  Video,
   CheckCircle,
   XCircle,
   AlertCircle,
   Phone,
   Filter,
   Search,
+  Loader2,
 } from "lucide-react";
+import { appointmentAPI } from "../../services/api";
 
 interface Appointment {
-  id: string;
-  patientName: string;
-  patientAvatar: string;
+  _id: string;
+  phone: string;
+  patient_name: string;
+  doctor_name: string;
+  doctor_phone: string;
+  specialization: string;
+  hospital: string;
+  slot: string;
   date: string;
-  time: string;
-  type: "in-person" | "video";
-  status: "scheduled" | "completed" | "cancelled" | "pending";
-  reason: string;
-  duration: string;
-  location?: string;
+  status: "pending" | "confirmed" | "cancelled" | "completed";
+  pre_appointment_answers?: {
+    symptoms?: string;
+    symptom_duration?: string;
+    current_medicines?: string;
+  };
+  created_at: string;
 }
 
 const DoctorAppointments: React.FC = () => {
   const [filterDate, setFilterDate] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Dummy appointments data
-  const appointments: Appointment[] = [
-    {
-      id: "1",
-      patientName: "Dhiraj",
-      patientAvatar: "https://i.pravatar.cc/150?img=12",
-      date: "2025-11-12",
-      time: "09:00 AM",
-      type: "in-person",
-      status: "scheduled",
-      reason: "Regular checkup",
-      duration: "30 mins",
-      location: "Clinic Room 101",
-    },
-    {
-      id: "2",
-      patientName: "Sarah ",
-      patientAvatar: "https://i.pravatar.cc/150?img=5",
-      date: "2025-11-12",
-      time: "10:30 AM",
-      type: "video",
-      status: "scheduled",
-      reason: "Follow-up consultation",
-      duration: "20 mins",
-    },
-    {
-      id: "3",
-      patientName: "Ram Kumar",
-      patientAvatar: "https://i.pravatar.cc/150?img=33",
-      date: "2025-11-11",
-      time: "02:00 PM",
-      type: "in-person",
-      status: "completed",
-      reason: "Blood pressure monitoring",
-      duration: "25 mins",
-      location: "Clinic Room 102",
-    },
-  ];
+  // Get doctor phone from localStorage
+  const doctorInfoString = localStorage.getItem("doctorInfo");
+  const doctor = doctorInfoString ? JSON.parse(doctorInfoString) : null;
+  const doctorPhone = doctor.phone;
+
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      if (!doctorPhone) {
+        setError("Doctor phone not found. Please log in again.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const response = await appointmentAPI.getByDoctorPhone(doctorPhone);
+        setAppointments(response.data.appointments || []);
+        setError(null);
+      } catch (err: any) {
+        console.error("Error fetching appointments:", err);
+        setError(err.response?.data?.message || "Failed to fetch appointments");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAppointments();
+  }, [doctorPhone]);
 
   const getStatusConfig = (status: string) => {
     switch (status) {
-      case "scheduled":
+      case "confirmed":
         return {
           color: "bg-blue-100 text-blue-700 border-blue-200",
-          icon: <Calendar size={16} />,
+          icon: <CheckCircle size={16} />,
         };
       case "completed":
         return {
@@ -101,7 +100,7 @@ const DoctorAppointments: React.FC = () => {
   };
 
   const filteredAppointments = appointments.filter((apt) => {
-    const matchesSearch = apt.patientName
+    const matchesSearch = apt.patient_name
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === "all" || apt.status === filterStatus;
@@ -121,10 +120,10 @@ const DoctorAppointments: React.FC = () => {
       color: "text-blue-600 bg-blue-100",
     },
     {
-      label: "Scheduled",
-      value: appointments.filter((a) => a.status === "scheduled").length,
-      icon: <Clock className="h-5 w-5" />,
-      color: "text-purple-600 bg-purple-100",
+      label: "Confirmed",
+      value: appointments.filter((a) => a.status === "confirmed").length,
+      icon: <CheckCircle className="h-5 w-5" />,
+      color: "text-blue-600 bg-blue-100",
     },
     {
       label: "Completed",
@@ -140,6 +139,28 @@ const DoctorAppointments: React.FC = () => {
     },
   ];
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-teal-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading appointments...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <p className="text-red-600 font-semibold">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 p-4 md:p-6">
       {/* Header */}
@@ -149,20 +170,6 @@ const DoctorAppointments: React.FC = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat, index) => (
-          <div
-            key={index}
-            className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition"
-          >
-            <div className="flex items-center justify-between">
-              <div className={`p-3 rounded-lg ${stat.color}`}>{stat.icon}</div>
-              <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
-            </div>
-            <p className="text-sm text-gray-600 mt-3">{stat.label}</p>
-          </div>
-        ))}
-      </div>
 
       {/* Search and Filters */}
       <div className="bg-white rounded-xl border border-gray-200 p-4">
@@ -196,7 +203,7 @@ const DoctorAppointments: React.FC = () => {
               className="h-11 px-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
               <option value="all">All Status</option>
-              <option value="scheduled">Scheduled</option>
+              <option value="confirmed">Confirmed</option>
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
               <option value="pending">Pending</option>
@@ -217,20 +224,18 @@ const DoctorAppointments: React.FC = () => {
             const statusConfig = getStatusConfig(appointment.status);
             return (
               <div
-                key={appointment.id}
+                key={appointment._id}
                 className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition"
               >
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
                   <div className="flex items-start gap-4 flex-1">
-                    <img
-                      src={appointment.patientAvatar}
-                      alt={appointment.patientName}
-                      className="h-14 w-14 rounded-full object-cover"
-                    />
+                    <div className="h-14 w-14 rounded-full bg-gradient-to-br from-teal-400 to-blue-500 flex items-center justify-center text-white font-bold text-xl">
+                      {appointment.patient_name.charAt(0).toUpperCase()}
+                    </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
+                      <div className="flex items-center gap-3 mb-2 flex-wrap">
                         <h3 className="text-lg font-bold text-gray-800">
-                          {appointment.patientName}
+                          {appointment.patient_name}
                         </h3>
                         <span
                           className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${statusConfig.color}`}
@@ -240,7 +245,11 @@ const DoctorAppointments: React.FC = () => {
                             appointment.status.slice(1)}
                         </span>
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm text-gray-600">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm text-gray-600 mb-3">
+                        <div className="flex items-center gap-2">
+                          <Phone size={16} />
+                          <span>{appointment.phone}</span>
+                        </div>
                         <div className="flex items-center gap-2">
                           <Calendar size={16} />
                           <span>
@@ -256,48 +265,60 @@ const DoctorAppointments: React.FC = () => {
                         </div>
                         <div className="flex items-center gap-2">
                           <Clock size={16} />
-                          <span>
-                            {appointment.time} ({appointment.duration})
-                          </span>
+                          <span>{appointment.slot}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          {appointment.type === "video" ? (
-                            <Video size={16} className="text-blue-500" />
-                          ) : (
-                            <MapPin size={16} className="text-green-500" />
-                          )}
-                          <span>
-                            {appointment.type === "video"
-                              ? "Video Call"
-                              : appointment.location}
-                          </span>
+                          <MapPin size={16} className="text-green-500" />
+                          <span>{appointment.hospital}</span>
                         </div>
                       </div>
-                      <div className="mt-2 text-sm text-gray-700">
-                        <strong>Reason:</strong> {appointment.reason}
-                      </div>
+                      {appointment.pre_appointment_answers && (
+                        <div className="mt-3 p-3 bg-gray-50 rounded-lg text-sm space-y-1">
+                          {appointment.pre_appointment_answers.symptoms && (
+                            <div>
+                              <strong className="text-gray-700">Symptoms:</strong>{" "}
+                              <span className="text-gray-600">
+                                {appointment.pre_appointment_answers.symptoms}
+                              </span>
+                            </div>
+                          )}
+                          {appointment.pre_appointment_answers.symptom_duration && (
+                            <div>
+                              <strong className="text-gray-700">Duration:</strong>{" "}
+                              <span className="text-gray-600">
+                                {appointment.pre_appointment_answers.symptom_duration}
+                              </span>
+                            </div>
+                          )}
+                          {appointment.pre_appointment_answers.current_medicines && (
+                            <div>
+                              <strong className="text-gray-700">Current Medicines:</strong>{" "}
+                              <span className="text-gray-600">
+                                {appointment.pre_appointment_answers.current_medicines}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="flex lg:flex-col gap-2">
-                    {appointment.status === "scheduled" && (
-                      <>
-                        {appointment.type === "video" ? (
-                          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium flex items-center gap-2">
-                            <Video size={16} />
-                            Join Call
-                          </button>
-                        ) : (
-                          <button className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition text-sm font-medium flex items-center gap-2">
-                            <CheckCircle size={16} />
-                            Check In
-                          </button>
-                        )}
-                      </>
+                  {/* <div className="flex lg:flex-col gap-2">
+                    {appointment.status === "confirmed" && (
+                      <button className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition text-sm font-medium flex items-center gap-2">
+                        <CheckCircle size={16} />
+                        Start Consultation
+                      </button>
+                    )}
+                    {appointment.status === "pending" && (
+                      <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium flex items-center gap-2">
+                        <CheckCircle size={16} />
+                        Confirm
+                      </button>
                     )}
                     <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm font-medium">
                       View Details
                     </button>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             );
